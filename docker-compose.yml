@@ -1,0 +1,23 @@
+services:
+  gazebo_nav2:
+    build: .
+    container_name: gazebo_nav2
+    shm_size: 12000m
+    ports:
+      - "6901:6901" # KasmVNC Web UI端口
+    environment:
+      - DISPLAY=:1
+      - VNC_PW=123456
+    volumes:
+      - rosbag2_data:/root/rosbag2
+    network_mode: host
+    command: >
+      bash -c "
+        chmod +x /root/start_kasm.sh && 
+        /root/start_kasm.sh &
+        sleep 10 &&
+        /root/launch_nav2.sh &
+      "
+
+volumes:
+  rosbag2_data:
