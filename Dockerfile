@@ -1,52 +1,54 @@
-FROM osrf/ros:humble-desktop-full
+# syntax = docker/dockerfile:1.2
+# ARG BASE_IMAGE=kasmweb/core-ubuntu-jammy:1.16.1
+ARG BASE_IMAGE=ubuntu:22.04
+
+FROM ${BASE_IMAGE}
+
+# Re-declare ROS_DISTRO after FROM to make it available
+ARG ROS_DISTRO=humble
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG ARCH=$(dpkg --print-architecture)
-ARG KASM_VNC_VERSION=1.3.3
+# Switch to root for installation
+USER root
 
-# 安装ROS2 Humble
-RUN apt-get update && apt-get install -y \
-    ros-humble-turtlebot3 \
-    ros-humble-turtlebot3-msgs \
-    ros-humble-turtlebot3-navigation2 \
-    ros-humble-turtlebot3-bringup \
-    ros-humble-turtlebot3-description \
-    ros-humble-turtlebot3-example \
-    ros-humble-turtlebot3-teleop \
-    ros-humble-navigation2 \
-    ros-humble-nav2-bringup \
-    ros-humble-ros2bag \
-    gazebo \
-    && rm -rf /var/lib/apt/lists/*
+# Add ROS2 repository and install base software
+RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update && apt-get install -y --no-install-recommends software-properties-common curl gnupg lsb-release \
+    && add-apt-repository universe \
+    && ARCH=$(dpkg --print-architecture) \
+    && UBUNTU_CODENAME=$(. /etc/os-release && echo $UBUNTU_CODENAME) \
+    && KEYRING_PATH=/usr/share/keyrings/ros-archive-keyring.gpg \
+    && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o ${KEYRING_PATH} \
+    && echo "deb [arch=${ARCH} signed-by=${KEYRING_PATH}] http://packages.ros.org/ros2/ubuntu ${UBUNTU_CODENAME} main" > /etc/apt/sources.list.d/ros2.list \
+    && apt-get update && apt-get install -y --no-install-recommends ros-${ROS_DISTRO}-desktop-full ros-${ROS_DISTRO}-turtlebot3*
 
-# 安装KasmVNC - 自动检测架构
-RUN apt-get update && apt-get install -y \
-    xfce4 \
-    dbus-x11 \
-    wget \
-    apt-utils \
-    libxtst6 \
-    libxrandr2 \
-    && mkdir -p /tmp/kasmvnc \
-    && wget -q -O /tmp/kasmvnc.deb https://github.com/kasmtech/KasmVNC/releases/download/v${KASM_VNC_VERSION}/kasmvncserver_jammy_${KASM_VNC_VERSION}_${ARCH}.deb \
-    && dpkg -i /tmp/kasmvnc.deb || true \
-    && apt-get -f install -y \
-    && rm -f /tmp/kasmvnc.deb \
-    && rm -rf /var/lib/apt/lists/*
+# Install Gazebo using the new keyring method
+RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && ARCH=$(dpkg --print-architecture) \
+    && UBUNTU_CODENAME=$(lsb_release -cs) \
+    && KEYRING_PATH=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+    && curl -sSL https://packages.osrfoundation.org/gazebo.gpg -o ${KEYRING_PATH} \
+    && echo "deb [arch=${ARCH} signed-by=${KEYRING_PATH}] http://packages.osrfoundation.org/gazebo/ubuntu-stable ${UBUNTU_CODENAME} main" > /etc/apt/sources.list.d/gazebo-stable.list \
+    && apt-get update && apt-get install -y --no-install-recommends gz-harmonic
 
-# Create a workspace for the launch files
-RUN mkdir -p /root/ros2_ws/src
-WORKDIR /root/ros2_ws
+# Set ROS environment variables
+ENV ROS_DOMAIN_ID=30
+ENV TURTLEBOT3_MODEL=waffle_pi
+ENV GAZEBO_MODEL_PATH=/opt/ros/${ROS_DISTRO}/share/turtlebot3_gazebo/models
 
-# Copy launch and recording scripts
-COPY launch_nav2.sh /root/launch_nav2.sh
-COPY record_topics.sh /root/record_topics.sh
-COPY ros_entrypoint.sh /ros_entrypoint.sh
-COPY start_kasm.sh /root/start_kasm.sh
+# Create workspace and copy scripts
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
+WORKDIR /action/ros2_ws
 
-# Set environment variable for TurtleBot3
-ENV TURTLEBOT3_MODEL=waffle
+# Copy launch scripts and files
+COPY scripts/ros_entrypoint.sh /ros_entrypoint.sh
+COPY launch/ /action/ros2_ws/src/launch/
 
-# Set the entrypoint
+# Set entrypoint and default command
 ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["ros2", "launch", "/action/ros2_ws/src/launch/launch.py"]
