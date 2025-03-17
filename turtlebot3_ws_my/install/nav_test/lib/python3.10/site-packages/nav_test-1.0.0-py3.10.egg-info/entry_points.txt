@@ -1,0 +1,3 @@
+[console_scripts]
+nav_controller = nav_test.nav_controller:main
+

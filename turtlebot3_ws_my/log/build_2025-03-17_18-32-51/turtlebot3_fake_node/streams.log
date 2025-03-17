@@ -1,0 +1,76 @@
+[0.129s] Invoking command in '/home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node': CMAKE_PREFIX_PATH=/home/qingyu/turtlebot3_ws_my/install/turtlebot3_msgs:/home/qingyu/turtlebot3_ws_my/install/turtlebot3:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_simulations:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_bringup:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_navigation2:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_gazebo:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_description:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_cartographer:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_examples:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_custom_interfaces:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk:/home/qingyu/coSense/install/cobridge:/home/qingyu/turtlebot3_ws_my/install/nav_test:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_teleop:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_example:/opt/ros/humble /usr/bin/cmake /home/qingyu/turtlebot3_ws_my/src/turtlebot3_simulations/turtlebot3_fake_node -DCMAKE_INSTALL_PREFIX=/home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node
+[0.165s] -- The C compiler identification is GNU 11.4.0
+[0.200s] -- The CXX compiler identification is GNU 11.4.0
+[0.205s] -- Detecting C compiler ABI info
+[0.255s] -- Detecting C compiler ABI info - done
+[0.261s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.261s] -- Detecting C compile features
+[0.261s] -- Detecting C compile features - done
+[0.263s] -- Detecting CXX compiler ABI info
+[0.314s] -- Detecting CXX compiler ABI info - done
+[0.319s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.319s] -- Detecting CXX compile features
+[0.320s] -- Detecting CXX compile features - done
+[0.322s] -- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.432s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.482s] -- Found geometry_msgs: 4.2.4 (/opt/ros/humble/share/geometry_msgs/cmake)
+[0.514s] -- Found rosidl_generator_c: 3.1.6 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.517s] -- Found rosidl_adapter: 3.1.6 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.521s] -- Found rosidl_generator_cpp: 3.1.6 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.527s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.535s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.554s] -- Found nav_msgs: 4.2.4 (/opt/ros/humble/share/nav_msgs/cmake)
+[0.562s] -- Found rclcpp: 16.0.11 (/opt/ros/humble/share/rclcpp/cmake)
+[0.581s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.583s] -- Found rmw_cyclonedds_cpp: 1.3.4 (/opt/ros/humble/share/rmw_cyclonedds_cpp/cmake)
+[0.594s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[0.599s] -- Looking for pthread.h
+[0.645s] -- Looking for pthread.h - found
+[0.646s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[0.697s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[0.698s] -- Found Threads: TRUE  
+[0.722s] -- Found sensor_msgs: 4.2.4 (/opt/ros/humble/share/sensor_msgs/cmake)
+[0.730s] -- Found tf2: 0.25.11 (/opt/ros/humble/share/tf2/cmake)
+[0.736s] -- Found tf2_msgs: 0.25.11 (/opt/ros/humble/share/tf2_msgs/cmake)
+[0.755s] -- Found turtlebot3_msgs: 2.2.3 (/home/qingyu/turtlebot3_ws_my/install/turtlebot3_msgs/share/turtlebot3_msgs/cmake)
+[0.825s] -- Configuring done
+[0.835s] -- Generating done
+[0.838s] -- Build files have been written to: /home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node
+[0.854s] Invoked command in '/home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node' returned '0': CMAKE_PREFIX_PATH=/home/qingyu/turtlebot3_ws_my/install/turtlebot3_msgs:/home/qingyu/turtlebot3_ws_my/install/turtlebot3:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_simulations:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_bringup:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_navigation2:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_gazebo:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_description:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_cartographer:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_examples:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_custom_interfaces:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk:/home/qingyu/coSense/install/cobridge:/home/qingyu/turtlebot3_ws_my/install/nav_test:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_teleop:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_example:/opt/ros/humble /usr/bin/cmake /home/qingyu/turtlebot3_ws_my/src/turtlebot3_simulations/turtlebot3_fake_node -DCMAKE_INSTALL_PREFIX=/home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node
+[0.856s] Invoking command in '/home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node': CMAKE_PREFIX_PATH=/home/qingyu/turtlebot3_ws_my/install/turtlebot3_msgs:/home/qingyu/turtlebot3_ws_my/install/turtlebot3:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_simulations:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_bringup:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_navigation2:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_gazebo:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_description:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_cartographer:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_examples:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_custom_interfaces:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk:/home/qingyu/coSense/install/cobridge:/home/qingyu/turtlebot3_ws_my/install/nav_test:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_teleop:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_example:/opt/ros/humble /usr/bin/cmake --build /home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node -- -j32 -l32
+[0.908s] [ 50%] [32mBuilding CXX object CMakeFiles/turtlebot3_fake_node.dir/src/turtlebot3_fake_node.cpp.o[0m
+[6.296s] [100%] [32m[1mLinking CXX executable turtlebot3_fake_node[0m
+[6.515s] [100%] Built target turtlebot3_fake_node
+[6.523s] Invoked command in '/home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node' returned '0': CMAKE_PREFIX_PATH=/home/qingyu/turtlebot3_ws_my/install/turtlebot3_msgs:/home/qingyu/turtlebot3_ws_my/install/turtlebot3:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_simulations:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_bringup:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_navigation2:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_gazebo:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_description:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_cartographer:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_examples:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_custom_interfaces:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk:/home/qingyu/coSense/install/cobridge:/home/qingyu/turtlebot3_ws_my/install/nav_test:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_teleop:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_example:/opt/ros/humble /usr/bin/cmake --build /home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node -- -j32 -l32
+[6.524s] Invoking command in '/home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node': CMAKE_PREFIX_PATH=/home/qingyu/turtlebot3_ws_my/install/turtlebot3_msgs:/home/qingyu/turtlebot3_ws_my/install/turtlebot3:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_simulations:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_bringup:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_navigation2:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_gazebo:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_description:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_cartographer:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_examples:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_custom_interfaces:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk:/home/qingyu/coSense/install/cobridge:/home/qingyu/turtlebot3_ws_my/install/nav_test:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_teleop:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_example:/opt/ros/humble /usr/bin/cmake --install /home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node
+[6.529s] -- Install configuration: ""
+[6.529s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/lib/turtlebot3_fake_node/turtlebot3_fake_node
+[6.531s] -- Set runtime path of "/home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/lib/turtlebot3_fake_node/turtlebot3_fake_node" to ""
+[6.531s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/launch
+[6.531s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/launch/rviz2.launch.py
+[6.531s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/launch/turtlebot3_fake_node.launch.py
+[6.531s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/param
+[6.531s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/param/waffle.yaml
+[6.531s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/param/waffle_pi.yaml
+[6.531s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/param/burger.yaml
+[6.531s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/include/
+[6.531s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/include//turtlebot3_fake_node
+[6.531s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/include//turtlebot3_fake_node/turtlebot3_fake_node.hpp
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/ament_index/resource_index/package_run_dependencies/turtlebot3_fake_node
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/ament_index/resource_index/parent_prefix_path/turtlebot3_fake_node
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/environment/ament_prefix_path.sh
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/environment/ament_prefix_path.dsv
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/environment/path.sh
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/environment/path.dsv
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/local_setup.bash
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/local_setup.sh
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/local_setup.zsh
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/local_setup.dsv
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/package.dsv
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/ament_index/resource_index/packages/turtlebot3_fake_node
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/cmake/ament_cmake_export_include_directories-extras.cmake
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/cmake/ament_cmake_export_dependencies-extras.cmake
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/cmake/turtlebot3_fake_nodeConfig.cmake
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/cmake/turtlebot3_fake_nodeConfig-version.cmake
+[6.532s] -- Installing: /home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node/share/turtlebot3_fake_node/package.xml
+[6.533s] Invoked command in '/home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node' returned '0': CMAKE_PREFIX_PATH=/home/qingyu/turtlebot3_ws_my/install/turtlebot3_msgs:/home/qingyu/turtlebot3_ws_my/install/turtlebot3:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_simulations:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_bringup:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_navigation2:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_fake_node:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_gazebo:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_description:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_cartographer:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_examples:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk_custom_interfaces:/home/qingyu/turtlebot3_ws_my/install/dynamixel_sdk:/home/qingyu/coSense/install/cobridge:/home/qingyu/turtlebot3_ws_my/install/nav_test:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_teleop:/home/qingyu/turtlebot3_ws_my/install/turtlebot3_example:/opt/ros/humble /usr/bin/cmake --install /home/qingyu/turtlebot3_ws_my/build/turtlebot3_fake_node

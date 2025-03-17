@@ -1,0 +1,39 @@
+[0.418s] Invoking command in '/home/qingyu/turtlebot3_ws_my/src/nav_test': PYTHONPATH=/home/qingyu/turtlebot3_ws_my/build/nav_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/qingyu/turtlebot3_ws_my/install/nav_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/nav_test build --build-base /home/qingyu/turtlebot3_ws_my/build/nav_test/build install --record /home/qingyu/turtlebot3_ws_my/build/nav_test/install.log --install-scripts $base/lib/nav_test --single-version-externally-managed install_data
+[0.576s] running egg_info
+[0.576s] creating ../../build/nav_test/nav_test.egg-info
+[0.576s] writing ../../build/nav_test/nav_test.egg-info/PKG-INFO
+[0.576s] writing dependency_links to ../../build/nav_test/nav_test.egg-info/dependency_links.txt
+[0.576s] writing entry points to ../../build/nav_test/nav_test.egg-info/entry_points.txt
+[0.576s] writing requirements to ../../build/nav_test/nav_test.egg-info/requires.txt
+[0.576s] writing top-level names to ../../build/nav_test/nav_test.egg-info/top_level.txt
+[0.576s] writing manifest file '../../build/nav_test/nav_test.egg-info/SOURCES.txt'
+[0.577s] reading manifest file '../../build/nav_test/nav_test.egg-info/SOURCES.txt'
+[0.577s] writing manifest file '../../build/nav_test/nav_test.egg-info/SOURCES.txt'
+[0.577s] running build
+[0.577s] running build_py
+[0.577s] creating /home/qingyu/turtlebot3_ws_my/build/nav_test/build
+[0.577s] creating /home/qingyu/turtlebot3_ws_my/build/nav_test/build/lib
+[0.577s] creating /home/qingyu/turtlebot3_ws_my/build/nav_test/build/lib/nav_test
+[0.577s] copying nav_test/__init__.py -> /home/qingyu/turtlebot3_ws_my/build/nav_test/build/lib/nav_test
+[0.577s] copying nav_test/nav_controller.py -> /home/qingyu/turtlebot3_ws_my/build/nav_test/build/lib/nav_test
+[0.577s] running install
+[0.577s] running install_lib
+[0.578s] creating /home/qingyu/turtlebot3_ws_my/install/nav_test/lib/python3.10/site-packages/nav_test
+[0.578s] copying /home/qingyu/turtlebot3_ws_my/build/nav_test/build/lib/nav_test/__init__.py -> /home/qingyu/turtlebot3_ws_my/install/nav_test/lib/python3.10/site-packages/nav_test
+[0.578s] copying /home/qingyu/turtlebot3_ws_my/build/nav_test/build/lib/nav_test/nav_controller.py -> /home/qingyu/turtlebot3_ws_my/install/nav_test/lib/python3.10/site-packages/nav_test
+[0.578s] byte-compiling /home/qingyu/turtlebot3_ws_my/install/nav_test/lib/python3.10/site-packages/nav_test/__init__.py to __init__.cpython-310.pyc
+[0.578s] byte-compiling /home/qingyu/turtlebot3_ws_my/install/nav_test/lib/python3.10/site-packages/nav_test/nav_controller.py to nav_controller.cpython-310.pyc
+[0.579s] running install_data
+[0.579s] copying package.xml -> /home/qingyu/turtlebot3_ws_my/install/nav_test/share/nav_test
+[0.579s] creating /home/qingyu/turtlebot3_ws_my/install/nav_test/share/nav_test/launch
+[0.579s] copying launch/test_nav.launch.py -> /home/qingyu/turtlebot3_ws_my/install/nav_test/share/nav_test/launch
+[0.579s] creating /home/qingyu/turtlebot3_ws_my/install/nav_test/share/nav_test/config
+[0.579s] copying config/test_points.yaml -> /home/qingyu/turtlebot3_ws_my/install/nav_test/share/nav_test/config
+[0.579s] creating /home/qingyu/turtlebot3_ws_my/install/nav_test/lib/nav_test
+[0.579s] copying resource/nav_test -> /home/qingyu/turtlebot3_ws_my/install/nav_test/lib/nav_test
+[0.579s] running install_egg_info
+[0.580s] Copying ../../build/nav_test/nav_test.egg-info to /home/qingyu/turtlebot3_ws_my/install/nav_test/lib/python3.10/site-packages/nav_test-1.0.0-py3.10.egg-info
+[0.580s] running install_scripts
+[0.590s] Installing nav_controller script to /home/qingyu/turtlebot3_ws_my/install/nav_test/lib/nav_test
+[0.590s] writing list of installed files to '/home/qingyu/turtlebot3_ws_my/build/nav_test/install.log'
+[0.601s] Invoked command in '/home/qingyu/turtlebot3_ws_my/src/nav_test' returned '0': PYTHONPATH=/home/qingyu/turtlebot3_ws_my/build/nav_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/qingyu/turtlebot3_ws_my/install/nav_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/nav_test build --build-base /home/qingyu/turtlebot3_ws_my/build/nav_test/build install --record /home/qingyu/turtlebot3_ws_my/build/nav_test/install.log --install-scripts $base/lib/nav_test --single-version-externally-managed install_data
