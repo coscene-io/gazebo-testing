@@ -13,7 +13,7 @@ from rclpy.qos import QoSProfile
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import String
-from action_msgs.msg import GoalStatus  # 确保正确导入状态码
+from action_msgs.msg import GoalStatus  
 
 class TaskManager:
     def __init__(self, config_path):
@@ -65,7 +65,6 @@ class NavController(Node):
     def __init__(self):
         super().__init__('advanced_nav_controller')
         
-        # 参数声明
         self.declare_parameter('config_path', '')
         self.declare_parameter('report_path', '/home/qingyu')
         
@@ -98,7 +97,6 @@ class NavController(Node):
         self.start_next_task()
 
     def start_next_task(self):
-        """启动下一任务"""
         if self.stop_navigation:
             return
 
@@ -106,7 +104,6 @@ class NavController(Node):
         if not next_task:
             self.generate_report()
             self.destroy_node()
-            rclpy.shutdown()
             return
 
         self.current_task = next_task
@@ -135,7 +132,6 @@ class NavController(Node):
         result_future.add_done_callback(self.goal_result_callback)
 
     def goal_result_callback(self, future):
-        """关键修复：使用状态码而非结果字段"""
         try:
             result_wrapper = future.result()
             
@@ -148,9 +144,9 @@ class NavController(Node):
                 GoalStatus.STATUS_ACCEPTED: "已接受",
                 GoalStatus.STATUS_EXECUTING: "执行中",
                 GoalStatus.STATUS_CANCELING: "取消中",
-                GoalStatus.STATUS_SUCCEEDED: "成功",
+                GoalStatus.STATUS_SUCCEEDED: "导航成功",
                 GoalStatus.STATUS_CANCELED: "已取消",
-                GoalStatus.STATUS_ABORTED: "已放弃"
+                GoalStatus.STATUS_ABORTED: "目标点无法到达，已放弃"
             }
             
             self.get_logger().info(f"导航最终状态: {status_map.get(goal_status, '未知状态')} ({goal_status})")
@@ -220,7 +216,6 @@ class NavController(Node):
             self.start_next_task()
 
     def generate_report(self):
-        """关键修复：路径自动创建"""
         try:
             report_path = os.path.join(
                 self.get_parameter('report_path').value,
@@ -257,6 +252,8 @@ class NavController(Node):
             with open(report_path, 'w', encoding='utf-8') as f:
                 json.dump(report, f, indent=2, ensure_ascii=False)
             self.get_logger().info(f"测试报告已生成: {report_path}")
+            self.get_logger().info("所有任务完成，准备退出")  
+            rclpy.try_shutdown()  
             
         except PermissionError:
             self.get_logger().error(f"无权限写入文件: {report_path}")
