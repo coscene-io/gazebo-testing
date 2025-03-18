@@ -26,7 +26,7 @@ This repository provides a TurtleBot3 robot simulation environment and navigatio
 ```bash
 # Clone repository
 git clone <repo-url>
-cd /home/user-name/gazebo-testing/turtlebot3_ws_my  (Depends on your folder)
+cd /home/user-name/gazebo-testing/ros2_ws  (Depends on your folder)
 
 # Build package
 colcon build
@@ -38,13 +38,14 @@ colcon build
 source /opt/ros/humble/setup.bash
 
 # TurtleBot3 Configuration
-source ~/turtlebot3_ws_my/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 export ROS_DOMAIN_ID=30  # TURTLEBOT3 ID
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/turtlebot3_ws_my/src/turtlebot3/turtlebot3_simulations/turtlebot3_gazebo/models
+export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros2_ws/src/turtlebot3/turtlebot3_simulations/turtlebot3_gazebo/models (这个路径需要检查下，可能在镜像里跑的时候要改，models文件夹在repo的目录是 /gazebo-testing/ros2_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_waffle
+)
 export TURTLEBOT3_MODEL=waffle_pi
 
 # Workspace Setup
-source ~/home/user-name/gazebo-testing/turtlebot3_ws_my/install/setup.bash  (Depends on your build folder)
+source ~/home/user-name/gazebo-testing/ros2_ws/install/setup.bash  (Depends on your build folder)
 ```
 
 ### 3. Launch Simulation
