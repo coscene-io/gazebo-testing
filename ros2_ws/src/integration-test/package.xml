@@ -1,0 +1,25 @@
+# a standard package.xml file
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package>
+  <name>integration-test</name>
+  <version>0.0.0</version>
+  <description>A standard package.xml file</description>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav2_msgs</depend>
+  <depend>rosidl_default_runtime</depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>python-pytest</exec_depend>
+  
+  <exec_depend>ament_lint_auto</exec_depend>
+  <exec_depend>ament_lint_common</exec_depend>
+  <exec_depend>ament_flake8</exec_depend>
+  <exec_depend>ament_pep257</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

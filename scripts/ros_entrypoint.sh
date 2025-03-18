@@ -1,5 +1,7 @@
 #!/bin/bash
 
+/dockerstartup/kasm_default_profile.sh /dockerstartup/vnc_startup.sh /dockerstartup/kasm_startup.sh &
+
 # Source ROS2 environment
 source /opt/ros/humble/setup.bash
 

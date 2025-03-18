@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1.2
-# ARG BASE_IMAGE=kasmweb/core-ubuntu-jammy:1.16.1
-ARG BASE_IMAGE=ubuntu:22.04
+ARG BASE_IMAGE=kasmweb/ubuntu-jammy-desktop:1.16.1
+# ARG BASE_IMAGE=ubuntu:22.04
 
 FROM ${BASE_IMAGE}
 
@@ -40,15 +40,17 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
 ENV ROS_DOMAIN_ID=30
 ENV TURTLEBOT3_MODEL=waffle_pi
 ENV GAZEBO_MODEL_PATH=/opt/ros/${ROS_DISTRO}/share/turtlebot3_gazebo/models
-
-# Create workspace and copy scripts
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 WORKDIR /action/ros2_ws
 
 # Copy launch scripts and files
 COPY scripts/ros_entrypoint.sh /ros_entrypoint.sh
-COPY launch/ /action/ros2_ws/src/launch/
+COPY ros2_ws/ /action/ros2_ws/
+
+USER 1000
+# Create workspace and copy scripts
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
+    && mkdir -p $HOME/Desktop
 
 # Set entrypoint and default command
 ENTRYPOINT ["/ros_entrypoint.sh"]
-CMD ["ros2", "launch", "/action/ros2_ws/src/launch/launch.py"]
+CMD ["ros2", "launch", "integration-test", "launch/launch.py"]

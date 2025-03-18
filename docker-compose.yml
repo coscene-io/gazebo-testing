@@ -17,6 +17,9 @@ services:
     volumes:
       - rosbag2_data:/root/rosbag2
     network_mode: host
+    tty: true
+    stdin_open: true
+    command: ["/bin/bash"]
 
 volumes:
   rosbag2_data:
