@@ -58,6 +58,30 @@ cp -r sim_map ~/desired_location
 cd ~/desired_location/20250314
 ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=true map:=normal.yaml
 
+# (In new terminal) localization
+ros2 topic pub /initialpose geometry_msgs/msg/PoseWithCovarianceStamped '
+{
+  header: {
+    stamp: {sec: 0, nanosec: 0},
+    frame_id: "map"
+  },
+  pose: {
+    pose: {
+      position: {x: 0.00392, y: -0.0045, z: 0.191},                       
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}                     
+    },
+    covariance: [
+      0.25, 0.0, 0.0, 0.0, 0.0, 0.0,                          
+      0.0, 0.25, 0.0, 0.0, 0.0, 0.0,           
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.06853891945200942, 0.0, 0.0,                     
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    ]
+  }
+}' --once
+
+
 # (In new terminal) Start test suite
 ros2 launch nav_test test_nav.launch.py
 
