@@ -15,7 +15,7 @@ def generate_launch_description():
         [
             Node(
                 package="nav_test",
-                executable="nav_controller",  # Use the entry point name without .py
+                executable="nav_controller",
                 name="nav_controller",
                 output="screen",
                 parameters=[

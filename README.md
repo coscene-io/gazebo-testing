@@ -54,6 +54,8 @@ source ${ROS_WORKSPACE}/install/setup.bash
 # Start Gazebo world
 ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
 
+# beware of this bug: https://github.com/ROBOTIS-GIT/turtlebot3/pull/916a
+# the fix is in the devel branch but doesn't seems to be released to the apt source
 # (In new terminal) Configure navigation
 cp -r sim_map ~/desired_location
 cd ~/desired_location/20250314

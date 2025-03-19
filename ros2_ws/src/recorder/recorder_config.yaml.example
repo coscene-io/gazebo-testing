@@ -1,0 +1,44 @@
+# Recording file storage directory
+record_dir: "/output/mcap"
+
+# List of topics to record (leave empty to record all topics)
+topics:
+  - /amcl_pose
+  - /cmd_vel_nav
+  - /error_status
+  - /global_costmap/costmap
+  - /global_costmap/costmap_updates
+  - /global_costmap/footprint
+  - /global_costmap/published_footprint
+  - /goal_pose
+  - /local_costmap/costmap
+  - /local_costmap/costmap_updates
+  - /local_costmap/footprint
+  - /local_costmap/published_footprint
+  - /local_plan
+  - /map
+  - /odom
+  - /plan
+  - /plan_smoothed
+  - /received_global_plan
+  - /robot_description
+  - /scan
+  - /tf
+  - /tf_static
+  - /rosout
+
+# Single file size limit (bytes)
+max_split_size: "104857600"  # 100MB
+
+# Storage format (mcap, sqlite3)
+storage_format: "mcap"
+
+# Compression settings (optional)
+compression_format: "zstd"  # Supported: zstd
+compression_mode: "file"  # For mcap: only file mode is supported
+
+# Maximum duration per file (seconds), 0 means no limit
+max_bag_duration: "300"  # 5 minutes per file
+
+# Maximum cache size (bytes)
+max_cache_size: "0"
