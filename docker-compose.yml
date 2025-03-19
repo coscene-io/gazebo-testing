@@ -1,25 +1,74 @@
 services:
-  gazebo_nav2:
+  base:
+    image: coscene/gazebo:humble
     build:
       context: .
+      dockerfile: docker/Dockerfile
       network: host
       args:
         https_proxy: http://127.0.0.1:18178
         http_proxy: http://127.0.0.1:18178
         all_proxy: socks5://127.0.0.1:18179
-    container_name: gazebo_nav2
-    shm_size: 12000m
-    ports:
-      - "6901:6901" # KasmVNC Web UI端口
-    environment:
-      - DISPLAY=:1
-      - VNC_PW=123456
-    volumes:
-      - rosbag2_data:/root/rosbag2
-    network_mode: host
+
+  dev:
+    extends: base
     tty: true
     stdin_open: true
     command: ["/bin/bash"]
+    profiles:
+      - dev
+
+  gazebo-world:
+    extends: base
+    command: >
+      ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+    networks:
+      - rosnet
+
+  tb_nav2:
+    extends: base
+    command: >
+      ros2 launch turtlebot3_navigation2 navigation2.launch.py
+      use_sim_time:=true
+      map:=/input/maps/20250314/normal.yaml
+    volumes:
+      - ./sim_map:/input/maps
+    networks:
+      - rosnet
+    depends_on:
+      - gazebo-world
+
+  nav_test:
+    extends: base
+    command: >
+      ros2 launch nav_test test_nav.launch.py
+    networks:
+      - rosnet
+    depends_on:
+      - gazebo-world
+      - tb_nav2
+      - record_bag
+
+  record_bag:
+    extends: base
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: base
+    command: >
+      python3 src/recorder/recorder.py -c src/recorder/recorder_config.yaml.example
+    volumes:
+      - ./recorder:/action/ros2_ws/src/recorder
+      - ./output:/output
+    restart: unless-stopped
+    networks:
+      - rosnet
+    depends_on:
+      - gazebo-world
+      - tb_nav2
 
 volumes:
   rosbag2_data:
+
+networks:
+  rosnet:

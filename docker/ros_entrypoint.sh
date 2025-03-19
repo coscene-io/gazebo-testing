@@ -1,13 +1,11 @@
 #!/bin/bash
 
-/dockerstartup/kasm_default_profile.sh /dockerstartup/vnc_startup.sh /dockerstartup/kasm_startup.sh &
-
 # Source ROS2 environment
 source /opt/ros/humble/setup.bash
 
 # Source any additional workspace if it exists
-if [ -f /root/ros2_ws/install/setup.bash ]; then
-    source /root/ros2_ws/install/setup.bash
+if [ -f /action/ros2_ws/install/setup.bash ]; then
+    source /action/ros2_ws/install/setup.bash
 fi
 
 # Set up ROS environment variables
