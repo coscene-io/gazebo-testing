@@ -170,9 +170,9 @@ class NavController(Node):
 
             # Wait for 3 seconds to ensure AMCL processes the initial pose
             self.get_logger().info(
-                "Waiting 3 seconds for AMCL to process the initial pose..."
+                "Waiting 10 seconds for AMCL to process the initial pose..."
             )
-            time.sleep(3.0)
+            time.sleep(10.0)
 
             # Start navigation tasks
             self.get_logger().info("Starting navigation tasks...")
@@ -379,8 +379,6 @@ def main(args=None):
             print(f"\033[31mFATAL: {error_msg}\033[0m", file=sys.stderr)
 
     finally:
-        if controller is not None:
-            controller.destroy_node()
         rclpy.shutdown()
 
 
