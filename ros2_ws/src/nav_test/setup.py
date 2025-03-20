@@ -17,7 +17,7 @@ setup(
     install_requires=["setuptools"],
     zip_safe=True,
     maintainer="Qingyu",
-    maintainer_email="qingyu@example.com",
+    maintainer_email="qingyu.zeng@coscene.io",
     description="Navigation test system",
     license="Apache 2.0",
     entry_points={

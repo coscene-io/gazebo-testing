@@ -4,7 +4,7 @@
   <name>nav_test</name>
   <version>1.0.0</version>
   <description>Navigation test system with automated task management</description>
-  <maintainer email="qingyu@example.com">Qingyu</maintainer>
+  <maintainer email="qingyu.zeng@coscene.io">Qingyu</maintainer>
   <license>Apache 2.0</license>
 
   <depend>rclpy</depend>

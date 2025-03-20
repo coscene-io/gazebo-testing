@@ -67,3 +67,16 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
 
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["ros2", "launch", "cobridge", "cobridge_launch.xml"]
+
+########################################################
+
+FROM base as coscene_recorder
+
+COPY ros2_ws/src/coscene_recorder/ /action/ros2_ws/src/coscene_recorder/
+
+RUN bash -c 'source /opt/ros/${ROS_DISTRO}/setup.bash \
+ && rosdep update \
+ && rosdep install -i --from-path src --rosdistro ${ROS_DISTRO} -y \
+ && colcon build --symlink-install --packages-select coscene_recorder'
+
+ENTRYPOINT [ "/ros_entrypoint.sh" ]

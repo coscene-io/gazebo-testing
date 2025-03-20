@@ -84,18 +84,19 @@ services:
   #     - tb_nav2
   #     - cobridge
 
-  # record_bag:
-  #   build:
-  #     context: .
-  #     dockerfile: docker/Dockerfile
-  #     target: base
-  #   command: >
-  #     python3 src/recorder/recorder.py -c src/recorder/recorder_config.yaml.example
-  #   volumes:
-  #     - ./ros2_ws/src/recorder:/action/ros2_ws/src/recorder
-  #     - ./output:/output
-  #   networks:
-  #     - rosnet
+  record_bag:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: coscene_recorder
+      network: host
+      args: *build-args
+    command: >
+      ros2 launch coscene_recorder record.launch.py
+    volumes:
+      - ./output:/output
+    networks:
+      - rosnet
 
 networks:
   rosnet:
