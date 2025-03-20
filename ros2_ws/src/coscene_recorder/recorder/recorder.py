@@ -2,16 +2,20 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import SingleThreadedExecutor
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rosbag2_py import RecordOptions, StorageOptions, Recorder
 import yaml
 import signal
 import sys
+import atexit
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional
 from datetime import datetime
 import random
 import string
+import os
 
 
 @dataclass
@@ -55,6 +59,12 @@ class RecorderNode(Node):
     def __init__(self):
         super().__init__("recorder_node")
 
+        # Flag to track if recording has been stopped
+        self._recording_stopped = False
+
+        # Callback group for periodic checks
+        self.callback_group = MutuallyExclusiveCallbackGroup()
+
         # Declare parameters
         self.declare_parameter("config_file", "config/recorder_config.yaml")
         config_file = self.get_parameter("config_file").value
@@ -71,11 +81,28 @@ class RecorderNode(Node):
             signal.signal(signal.SIGINT, self.signal_handler)
             signal.signal(signal.SIGTERM, self.signal_handler)
 
+            # Register cleanup function for Python exit
+            atexit.register(self.ensure_stop_recording)
+
             # Start recording
             self.start_recording()
+
+            # Add a timer to check ROS status
+            self.check_timer = self.create_timer(
+                1.0,  # Check every second
+                self.check_ros_status,
+                callback_group=self.callback_group,
+            )
+
         except Exception as e:
             self.get_logger().error(f"Failed to initialize recorder: {e}")
             raise
+
+    def check_ros_status(self):
+        """Check ROS status and stop recording if ROS is shutting down"""
+        if not rclpy.ok():
+            self.get_logger().info("ROS context is shutting down, stopping recording")
+            self.ensure_stop_recording()
 
     def load_config(self, config_path: str):
         """Load configuration from YAML file"""
@@ -114,6 +141,12 @@ class RecorderNode(Node):
             self.get_logger().error(f"Critical recording failure: {e}")
             sys.exit(1)
 
+    def ensure_stop_recording(self):
+        """Ensure stop_recording is only called once"""
+        if not self._recording_stopped:
+            self.stop_recording()
+            self._recording_stopped = True
+
     def stop_recording(self):
         self.get_logger().info("Stopping recording...")
         try:
@@ -125,9 +158,10 @@ class RecorderNode(Node):
     def signal_handler(self, sig, frame):
         """Handle signals for graceful shutdown"""
         self.get_logger().info(f"Received signal {sig}, gracefully shutting down...")
-        self.stop_recording()
+        # First stop recording
+        self.ensure_stop_recording()
+        # Then shutdown ROS
         rclpy.shutdown()
-        sys.exit(0)
 
 
 def main(args=None):
@@ -135,16 +169,25 @@ def main(args=None):
 
     try:
         node = RecorderNode()
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
+
+        # Use single-threaded executor
+        executor = SingleThreadedExecutor()
+        executor.add_node(node)
+
+        try:
+            executor.spin()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            # Ensure cleanup before shutdown
+            node.ensure_stop_recording()
+            executor.shutdown()
+            node.destroy_node()
+
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
     finally:
-        # Clean up
-        if "node" in locals():
-            node.stop_recording()
-            node.destroy_node()
+        # Final cleanup
         rclpy.shutdown()
 
 

@@ -7,11 +7,8 @@ import os
 
 
 def generate_launch_description():
-    config_file = os.path.join(
-        get_package_share_directory("coscene_recorder"),
-        "config",
-        "recorder_config.yaml",
-    )
+    pkg_dir = get_package_share_directory("coscene_recorder")
+    config_file = os.path.join(pkg_dir, "config", "recorder_config.yaml")
 
     recorder_node = Node(
         package="coscene_recorder",

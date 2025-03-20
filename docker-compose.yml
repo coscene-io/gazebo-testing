@@ -64,25 +64,25 @@ services:
       - ./ros2_ws/src/tb_nav2/param/fixed_waffle_pi.yaml:/opt/ros/humble/share/turtlebot3_navigation2/param/fixed_waffle_pi.yaml
     networks:
       - rosnet
+
+  nav_test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: nav_test
+      network: host
+      args: *build-args
+    command: >
+      ros2 launch nav_test test_nav.launch.py
+    volumes:
+      - ./output:/output
+    networks:
+      - rosnet
     depends_on:
       gazebo-world:
         condition: service_started
-
-  # nav_test:
-  #   build:
-  #     context: .
-  #     dockerfile: docker/Dockerfile
-  #     target: nav_test
-  #     network: host
-  #     args: *build-args
-  #   command: >
-  #     ros2 launch nav_test test_nav.launch.py
-  #   networks:
-  #     - rosnet
-  #   depends_on:
-  #     - gazebo-world
-  #     - tb_nav2
-  #     - cobridge
+      tb_nav2:
+        condition: service_started
 
   record_bag:
     build:

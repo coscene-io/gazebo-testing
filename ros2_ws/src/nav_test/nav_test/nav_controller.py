@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
-import rclpy
-import os
 import json
-import yaml
+import os
 import random
 import sys
-from uuid import uuid4
+import time
 from datetime import datetime
-from rclpy.node import Node
-from rclpy.action import ActionClient
-from rclpy.qos import QoSProfile
+from uuid import uuid4
+
+import rclpy
+import yaml
+from action_msgs.msg import GoalStatus
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from nav2_msgs.action import NavigateToPose
-from geometry_msgs.msg import PoseStamped
+from rclpy.action import ActionClient
+from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 from std_msgs.msg import String
-from action_msgs.msg import GoalStatus  
+
+from nav_test.ros_utils import load_pose
+
 
 class TaskManager:
     def __init__(self, config_path):
@@ -22,79 +27,160 @@ class TaskManager:
         self.task_queue = []
         self.history = []
         self.load_config()
-        
+
     def load_config(self):
         try:
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, "r") as f:
                 data = yaml.safe_load(f)
-                self.all_points = data['points']
+                self.all_points = data["points"]
         except Exception as e:
-            raise RuntimeError(f"配置文件加载失败: {str(e)}")
-            
+            raise RuntimeError(f"Configuration file loading failed: {str(e)}")
+
     def generate_task(self, num=10):
         if len(self.all_points) < num:
-            raise ValueError(f"配置文件仅含{len(self.all_points)}个点，需要至少{num}个点")
-            
+            raise ValueError(
+                f"Configuration file contains only {len(self.all_points)} points, at least {num} points are required"
+            )
+
         selected = random.sample(self.all_points, num)
         self.task_queue = [
             {
-                'id': f"TASK-{uuid4().hex[:6]}",
-                'point': p,
-                'status': 'pending',
-                'start_time': None,
-                'end_time': None,
-                'error_info': ''
-            } for p in selected
+                "id": f"TASK-{uuid4().hex[:6]}",
+                "point": p,
+                "status": "pending",
+                "start_time": None,
+                "end_time": None,
+                "error_info": "",
+            }
+            for p in selected
         ]
-    
+
     def get_next_task(self):
         return self.task_queue[0] if self.task_queue else None
-    
+
     def mark_task_complete(self, task_id, success=True, error_info=""):
         for idx, task in enumerate(self.task_queue):
-            if task['id'] == task_id:
-                task['status'] = 'success' if success else 'failed'
-                task['end_time'] = datetime.now()
-                task['error_info'] = error_info
+            if task["id"] == task_id:
+                task["status"] = "success" if success else "failed"
+                task["end_time"] = datetime.now()
+                task["error_info"] = error_info
                 completed = self.task_queue.pop(idx)
                 self.history.append(completed)
                 return completed
         return None
 
+
 class NavController(Node):
     def __init__(self):
-        super().__init__('advanced_nav_controller')
-        
-        self.declare_parameter('config_path', '')
-        self.declare_parameter('report_path', '/home/qingyu')
-        
+        super().__init__("advanced_nav_controller")
+
+        self.declare_parameter("config_path", "")
+        self.declare_parameter("report_path", "/home/qingyu")
+
         try:
-            config_path = self.get_parameter('config_path').value
-            if not os.path.exists(config_path):
-                raise FileNotFoundError(f"配置文件不存在: {config_path}")
-                
-            self.task_mgr = TaskManager(config_path)
+            # Get configuration file path
+            self.config_path = self.get_parameter("config_path").value
+            if not os.path.exists(self.config_path):
+                raise FileNotFoundError(
+                    f"Configuration file not found: {self.config_path}"
+                )
+
+            # Initialize task manager
+            self.task_mgr = TaskManager(self.config_path)
             self.task_mgr.generate_task()
-            
+
         except Exception as e:
-            self.get_logger().fatal(f"初始化失败: {str(e)}")
+            self.get_logger().fatal(f"Initialization failed: {str(e)}")
             raise
 
-        self.nav_client = ActionClient(self, NavigateToPose, '/navigate_to_pose')
+        self.nav_client = ActionClient(self, NavigateToPose, "/navigate_to_pose")
         self.task_success = 0
         self.task_fail = 0
-        
+
         qos = QoSProfile(depth=10)
         self.sub_error = self.create_subscription(
-            String, '/error_status', self.error_callback, qos)
-        self.pub_error = self.create_publisher(String, '/error_status', qos)
-        
+            String, "/error_status", self.error_callback, qos
+        )
+        self.pub_error = self.create_publisher(String, "/error_status", qos)
+
         self.current_goal_handle = None
         self.stop_navigation = False
         self.current_task = None
-        
+
+        # Schedule startup sequence with a short delay to allow node initialization to complete
+        self.startup_timer = self.create_timer(0.5, self.initialize_sequence)
+
+    def initialize_sequence(self):
+        # This method will run after node initialization is complete
+        # Ensure it only runs once by destroying the timer
+        self.destroy_timer(self.startup_timer)
+
+        # Wait for the navigation system to be ready
+        self.get_logger().info("Waiting for navigation server...")
         self.nav_client.wait_for_server()
-        self.start_next_task()
+        self.get_logger().info("Navigation server ready.")
+
+        # Check if AMCL is ready, publish initial pose, then start tasks
+        self.publish_initial_pose_and_start()
+
+    def publish_initial_pose_and_start(self):
+        """Publish the initial pose and then start navigation tasks"""
+        try:
+            # Load configuration file
+            with open(self.config_path, "r") as f:
+                config = yaml.safe_load(f)
+
+            # Use load_pose function to process configuration
+            initial_pose_msg = load_pose(config.get("initial_pose"))
+
+            # Set current timestamp to ensure message freshness
+            initial_pose_msg.header.stamp = self.get_clock().now().to_msg()
+
+            # Create publisher using AMCL's expected QoS settings
+            pub = self.create_publisher(
+                PoseWithCovarianceStamped, "/initialpose", QoSProfile(depth=1)
+            )
+
+            # First, check if the topic has subscribers (AMCL is listening)
+            self.get_logger().info(
+                "Checking if AMCL is ready to receive initial pose..."
+            )
+            timeout = 10.0  # seconds
+            start_time = time.time()
+            while pub.get_subscription_count() == 0:
+                if time.time() - start_time > timeout:
+                    self.get_logger().warn(
+                        "No subscribers found for /initialpose after waiting. Publishing anyway."
+                    )
+                    break
+                time.sleep(0.1)
+
+            # Log subscriber count for debugging
+            sub_count = pub.get_subscription_count()
+            self.get_logger().info(
+                f"Found {sub_count} subscribers for /initialpose topic"
+            )
+
+            # Publish the initial pose
+            pub.publish(initial_pose_msg)
+            self.get_logger().info("Initial pose published")
+
+            # Clean up publisher
+            self.destroy_publisher(pub)
+
+            # Wait for 3 seconds to ensure AMCL processes the initial pose
+            self.get_logger().info(
+                "Waiting 3 seconds for AMCL to process the initial pose..."
+            )
+            time.sleep(3.0)
+
+            # Start navigation tasks
+            self.get_logger().info("Starting navigation tasks...")
+            self.start_next_task()
+
+        except Exception as e:
+            self.get_logger().error(f"Failed to publish initial pose: {str(e)}")
+            raise
 
     def start_next_task(self):
         if self.stop_navigation:
@@ -107,24 +193,24 @@ class NavController(Node):
             return
 
         self.current_task = next_task
-        self.current_task['start_time'] = datetime.now()
-        
+        self.current_task["start_time"] = datetime.now()
+
         goal_msg = NavigateToPose.Goal()
         goal_msg.pose = PoseStamped()
         goal_msg.pose.header.frame_id = "map"
         goal_msg.pose.header.stamp = self.get_clock().now().to_msg()
-        goal_msg.pose.pose.position.x = self.current_task['point']['x']
-        goal_msg.pose.pose.position.y = self.current_task['point']['y']
-        goal_msg.pose.pose.orientation.w = self.current_task['point'].get('w', 1.0)
-        
-        self.get_logger().info(f"开始任务 {self.current_task['id']}")
+        goal_msg.pose.pose.position.x = self.current_task["point"]["x"]
+        goal_msg.pose.pose.position.y = self.current_task["point"]["y"]
+        goal_msg.pose.pose.orientation.w = self.current_task["point"].get("w", 1.0)
+
+        self.get_logger().info(f"Starting task {self.current_task['id']}")
         send_future = self.nav_client.send_goal_async(goal_msg)
         send_future.add_done_callback(self.goal_response_callback)
 
     def goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.handle_task_failure("目标被服务器拒绝")
+            self.handle_task_failure("Goal rejected by server")
             return
 
         self.current_goal_handle = goal_handle
@@ -134,22 +220,24 @@ class NavController(Node):
     def goal_result_callback(self, future):
         try:
             result_wrapper = future.result()
-            
-            # 获取动作最终状态
+
+            # Get action final status
             goal_status = result_wrapper.status
-            
-            # 状态码映射
+
+            # Status code mapping
             status_map = {
-                GoalStatus.STATUS_UNKNOWN: "未知状态",
-                GoalStatus.STATUS_ACCEPTED: "已接受",
-                GoalStatus.STATUS_EXECUTING: "执行中",
-                GoalStatus.STATUS_CANCELING: "取消中",
-                GoalStatus.STATUS_SUCCEEDED: "导航成功",
-                GoalStatus.STATUS_CANCELED: "已取消",
-                GoalStatus.STATUS_ABORTED: "目标点无法到达，已放弃"
+                GoalStatus.STATUS_UNKNOWN: "Unknown status",
+                GoalStatus.STATUS_ACCEPTED: "Accepted",
+                GoalStatus.STATUS_EXECUTING: "Executing",
+                GoalStatus.STATUS_CANCELING: "Canceling",
+                GoalStatus.STATUS_SUCCEEDED: "Navigation succeeded",
+                GoalStatus.STATUS_CANCELED: "Canceled",
+                GoalStatus.STATUS_ABORTED: "Target point unreachable, abandoned",
             }
-            
-            self.get_logger().info(f"导航最终状态: {status_map.get(goal_status, '未知状态')} ({goal_status})")
+
+            self.get_logger().info(
+                f"Navigation final status: {status_map.get(goal_status, 'Unknown status')} ({goal_status})"
+            )
 
             if goal_status == GoalStatus.STATUS_SUCCEEDED:
                 self.handle_task_success()
@@ -157,135 +245,144 @@ class NavController(Node):
                 self.handle_task_failure(status_map[goal_status])
 
         except Exception as e:
-            error_msg = f"结果处理异常: {str(e)}"
+            error_msg = f"Result processing exception: {str(e)}"
             self.get_logger().error(error_msg)
             self.handle_task_failure(error_msg)
 
     def handle_task_success(self):
-        self.task_mgr.mark_task_complete(self.current_task['id'])
+        self.task_mgr.mark_task_complete(self.current_task["id"])
         self.task_success += 1
-        self.get_logger().info(f"任务 {self.current_task['id']} 成功完成")
+        self.get_logger().info(f"Task {self.current_task['id']} completed successfully")
         self.start_next_task()
 
     def handle_task_failure(self, reason):
         error_msg = String()
         error_msg.data = f"code:10001,info:{reason},value:1"
         self.pub_error.publish(error_msg)
-        
+
         self.task_mgr.mark_task_complete(
-            self.current_task['id'], 
-            success=False, 
-            error_info=reason
+            self.current_task["id"], success=False, error_info=reason
         )
         self.task_fail += 1
-        self.get_logger().error(f"任务失败: {reason}")
+        self.get_logger().error(f"Task failed: {reason}")
         self.start_next_task()
 
     def error_callback(self, msg):
         error_dict = {}
         try:
-            for item in msg.data.split(','):
-                if ':' not in item:
+            for item in msg.data.split(","):
+                if ":" not in item:
                     continue
-                key, value = item.split(':', 1)
+                key, value = item.split(":", 1)
                 error_dict[key.strip()] = value.strip()
-            
-            code = int(error_dict.get('code', 0))
-            value = error_dict.get('value', '0')
+
+            code = int(error_dict.get("code", 0))
+            value = error_dict.get("value", "0")
 
             if 1000 <= code <= 1999:
-                if value == '1':
+                if value == "1":
                     self.emergency_stop()
-                elif value == '0' and self.stop_navigation:
+                elif value == "0" and self.stop_navigation:
                     self.resume_navigation()
-                
+
         except Exception as e:
-            self.get_logger().error(f"错误解析失败: {str(e)} 原始数据：{msg.data}")
+            self.get_logger().error(
+                f"Error parsing failed: {str(e)} Original data: {msg.data}"
+            )
 
     def emergency_stop(self):
         if self.current_goal_handle:
             self.current_goal_handle.cancel_goal_async()
             self.current_goal_handle = None
         self.stop_navigation = True
-        self.get_logger().warn("! 紧急停止激活 !")
+        self.get_logger().warn("! Emergency stop activated !")
 
     def resume_navigation(self):
         self.stop_navigation = False
-        self.get_logger().info("系统恢复正常运行")
+        self.get_logger().info("System resumed normal operation")
         if not self.current_goal_handle:
             self.start_next_task()
 
     def generate_report(self):
         try:
             report_path = os.path.join(
-                self.get_parameter('report_path').value,
-                f"nav_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                self.get_parameter("report_path").value,
+                f"nav_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
             )
-            
-            # 确保目录存在
+
+            # Ensure directory exists
             report_dir = os.path.dirname(report_path)
             os.makedirs(report_dir, exist_ok=True)
-            
+
             report = {
                 "metadata": {
                     "report_id": f"NAV-REPORT-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                     "generation_time": datetime.now().isoformat(),
                     "total_tasks": len(self.task_mgr.history),
                     "success_count": self.task_success,
-                    "failure_count": self.task_fail
+                    "failure_count": self.task_fail,
                 },
                 "tasks": [
                     {
-                        "task_id": t['id'],
+                        "task_id": t["id"],
                         "coordinates": {
-                            "x": t['point']['x'], 
-                            "y": t['point']['y'],
-                            "orientation": t['point'].get('w', 1.0)
+                            "x": t["point"]["x"],
+                            "y": t["point"]["y"],
+                            "orientation": t["point"].get("w", 1.0),
                         },
-                        "status": t['status'],
-                        "duration_sec": (t['end_time'] - t['start_time']).total_seconds() if t['end_time'] else 0,
-                        "error_info": t['error_info']
-                    } for t in self.task_mgr.history
-                ]
+                        "status": t["status"],
+                        "duration_sec": (
+                            (t["end_time"] - t["start_time"]).total_seconds()
+                            if t["end_time"]
+                            else 0
+                        ),
+                        "error_info": t["error_info"],
+                    }
+                    for t in self.task_mgr.history
+                ],
             }
 
-            with open(report_path, 'w', encoding='utf-8') as f:
+            with open(report_path, "w", encoding="utf-8") as f:
                 json.dump(report, f, indent=2, ensure_ascii=False)
-            self.get_logger().info(f"测试报告已生成: {report_path}")
-            self.get_logger().info("所有任务完成，准备退出")  
-            rclpy.try_shutdown()  
-            
+            self.get_logger().info(f"Test report generated: {report_path}")
+            self.get_logger().info("All tasks completed, preparing to exit")
+            rclpy.try_shutdown()
+
         except PermissionError:
-            self.get_logger().error(f"无权限写入文件: {report_path}")
+            self.get_logger().error(f"No permission to write file: {report_path}")
         except Exception as e:
-            self.get_logger().error(f"生成报告失败: {str(e)}")
+            self.get_logger().error(f"Report generation failed: {str(e)}")
+
 
 def main(args=None):
     rclpy.init(args=args)
     controller = None
-    
+
     try:
         controller = NavController()
         rclpy.spin(controller)
-        
+
     except KeyboardInterrupt:
         if controller:
-            controller.get_logger().info("用户终止操作")
+            controller.get_logger().info("User terminated operation")
         else:
-            rclpy.logging.get_logger('nav_controller').warning("启动前被中断")
-            
+            rclpy.logging.get_logger("nav_controller").warning(
+                "Started but interrupted before starting"
+            )
+
     except Exception as e:
         if controller:
-            controller.get_logger().error(f"运行时异常: {str(e)}")
+            controller.get_logger().error(f"Runtime exception: {str(e)}")
         else:
-            error_msg = f"启动失败: {str(e)}"
-            rclpy.logging.get_logger('nav_controller').fatal(error_msg)
+            error_msg = f"Startup failed: {str(e)}"
+            rclpy.logging.get_logger("nav_controller").fatal(error_msg)
             print(f"\033[31mFATAL: {error_msg}\033[0m", file=sys.stderr)
-            
+
     finally:
         if controller is not None:
             controller.destroy_node()
         rclpy.shutdown()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

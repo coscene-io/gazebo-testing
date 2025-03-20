@@ -5,23 +5,19 @@ import os
 
 
 def generate_launch_description():
-    # Get package path
     pkg_dir = get_package_share_directory("nav_test")
-
-    # Build config path
     config_path = os.path.join(pkg_dir, "config", "test_points.yaml")
 
-    return LaunchDescription(
-        [
-            Node(
-                package="nav_test",
-                executable="nav_controller",
-                name="nav_controller",
-                output="screen",
-                parameters=[
-                    {"config_path": config_path},
-                    {"report_path": "/outputs/nav_reports"},
-                ],
-            )
-        ]
+    # Node for nav_controller
+    controller_node = Node(
+        package="nav_test",
+        executable="nav_controller",
+        name="nav_controller",
+        output="screen",
+        parameters=[
+            {"config_path": config_path},
+            {"report_path": "/output/nav_reports"},
+        ],
     )
+
+    return LaunchDescription([controller_node])

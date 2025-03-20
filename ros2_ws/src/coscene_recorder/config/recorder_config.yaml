@@ -38,7 +38,7 @@ max_bag_duration: 300  # 5 minutes per file
 max_cache_size: 104857600  # 100MB
 
 # Compression format (zstd, snappy, lz4, Default)
-compression_format: "zstd"
+# compression_format: "zstd"
 
 # Compression level (Default, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-compression_level: "Default"
+# compression_level: "Default"
