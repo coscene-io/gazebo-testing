@@ -355,10 +355,12 @@ class NavController(Node):
 
 
 def main(args=None):
-    rclpy.init(args=args)
+    rclpy_initialized = False
     controller = None
 
     try:
+        rclpy.init(args=args)
+        rclpy_initialized = True
         controller = NavController()
         rclpy.spin(controller)
 
@@ -379,7 +381,10 @@ def main(args=None):
             print(f"\033[31mFATAL: {error_msg}\033[0m", file=sys.stderr)
 
     finally:
-        rclpy.shutdown()
+        if controller is not None:
+            controller.destroy_node()
+        if rclpy_initialized:
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":

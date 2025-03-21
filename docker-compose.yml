@@ -17,84 +17,21 @@ services:
     profiles:
       - dev
 
-  cobridge:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: cobridge
-      network: host
-      args: *build-args
-    ports:
-      - 21274:21274
-    networks:
-      - rosnet
-
-  gazebo-world:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: base
-      network: host
-      args: *build-args
-    environment:
-      - GAZEBO_MODEL_PATH=/action/ros2_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models
-      - TURTLEBOT3_MODEL=waffle_pi
-    command: >
-      ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
-    networks:
-      - rosnet
-
-  tb_nav2:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: nav_test
-      network: host
-      args: *build-args
-    environment:
-      - GAZEBO_MODEL_PATH=/action/ros2_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models
-      - TURTLEBOT3_MODEL=waffle_pi
-    command: >
-      ros2 launch turtlebot3_navigation2 navigation2.launch.py
-      use_sim_time:=true
-      params_file:=/opt/ros/humble/share/turtlebot3_navigation2/param/fixed_waffle_pi.yaml
-    volumes:
-      - ./ros2_ws/src/tb_nav2/map/map.yaml:/opt/ros/humble/share/turtlebot3_navigation2/map/map.yaml
-      - ./ros2_ws/src/tb_nav2/map/map.pgm:/opt/ros/humble/share/turtlebot3_navigation2/map/map.pgm
-      - ./ros2_ws/src/tb_nav2/param/fixed_waffle_pi.yaml:/opt/ros/humble/share/turtlebot3_navigation2/param/fixed_waffle_pi.yaml
-    networks:
-      - rosnet
-
   nav_test:
     build:
       context: .
       dockerfile: docker/Dockerfile
-      target: nav_test
       network: host
       args: *build-args
+    ports:
+      - 21274:21274
+    environment:
+      - TURTLEBOT3_MODEL=waffle_pi
     command: >
-      ros2 launch nav_test test_nav.launch.py
+      ros2 launch nav_test test_nav.launch.py --debug
     volumes:
       - ./output:/output
-    networks:
-      - rosnet
-    depends_on:
-      gazebo-world:
-        condition: service_started
-      tb_nav2:
-        condition: service_started
-
-  record_bag:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: coscene_recorder
-      network: host
-      args: *build-args
-    command: >
-      ros2 launch coscene_recorder record.launch.py
-    volumes:
-      - ./output:/output
+      - ./records/case1:/input
     networks:
       - rosnet
 

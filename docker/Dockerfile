@@ -1,7 +1,7 @@
 # syntax = docker/dockerfile:1.2
 ARG BASE_IMAGE=osrf/ros:humble-desktop-full
 
-FROM ${BASE_IMAGE} as base
+FROM ${BASE_IMAGE}
 
 # Re-declare ROS_DISTRO after FROM to make it available
 ENV ROS_DISTRO=humble
@@ -10,6 +10,10 @@ ENV ROS_DISTRO=humble
 RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean \
+ && SOURCE_URL=https://download.coscene.cn/coscene-apt-source \
+ && GPG_PATH=/etc/apt/trusted.gpg.d/coscene.gpg \
+ && curl -fsSL "$SOURCE_URL/coscene.gpg" | gpg --dearmor -o $GPG_PATH \
+ && echo "deb [signed-by=$GPG_PATH] $SOURCE_URL $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/coscene.list \
  && apt-get update && apt-get install -y --no-install-recommends \
     software-properties-common curl gnupg lsb-release \
     python3-colcon-common-extensions \
@@ -21,62 +25,20 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     ros-${ROS_DISTRO}-gazebo-ros-pkgs \
     ros-${ROS_DISTRO}-image-transport \
     ros-${ROS_DISTRO}-cv-bridge \
+    ros-${ROS_DISTRO}-cobridge\
  && echo "source /usr/share/colcon_cd/function/colcon_cd.sh" >> ~/.bashrc \
  && echo "export _colcon_cd_root=/opt/ros/${ROS_DISTRO}/" >> ~/.bashrc \
  && echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc
 
-WORKDIR /action/ros2_ws
 COPY ./docker/ros_entrypoint.sh /
-COPY ros2_ws/src/turtlebot3_simulations/ /action/ros2_ws/src/turtlebot3_simulations/
-
-# Create workspace and copy scripts
-RUN bash -c 'source /opt/ros/${ROS_DISTRO}/setup.bash \
- && rosdep update \
- && rosdep install -i --from-path src --rosdistro ${ROS_DISTRO} -y \
- && colcon build --symlink-install --packages-select turtlebot3_gazebo'
-
 ENTRYPOINT [ "/ros_entrypoint.sh" ]
 
-########################################################
-
-FROM base as nav_test
-
-COPY ros2_ws/src/nav_test/ /action/ros2_ws/src/nav_test/
+WORKDIR /action/ros2_ws
+COPY ros2_ws/src/ /action/ros2_ws/src/
 
 RUN bash -c 'source /opt/ros/${ROS_DISTRO}/setup.bash \
  && rosdep update \
  && rosdep install -i --from-path src --rosdistro ${ROS_DISTRO} -y \
- && colcon build --symlink-install --packages-select nav_test'
+ && colcon build --symlink-install'
 
-ENTRYPOINT [ "/ros_entrypoint.sh" ]
-
-########################################################
-
-FROM base as cobridge
-
-RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
-    --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    rm -f /etc/apt/apt.conf.d/docker-clean \
- && SOURCE_URL=https://download.coscene.cn/coscene-apt-source \
- && GPG_PATH=/etc/apt/trusted.gpg.d/coscene.gpg \
- && curl -fsSL "$SOURCE_URL/coscene.gpg" | gpg --dearmor -o $GPG_PATH \
- && echo "deb [signed-by=$GPG_PATH] $SOURCE_URL $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/coscene.list \
- && apt-get update && apt-get install -y --no-install-recommends \
-    python3-colcon-common-extensions \
-    ros-${ROS_DISTRO}-cobridge
-
-ENTRYPOINT ["/ros_entrypoint.sh"]
-CMD ["ros2", "launch", "cobridge", "cobridge_launch.xml"]
-
-########################################################
-
-FROM base as coscene_recorder
-
-COPY ros2_ws/src/coscene_recorder/ /action/ros2_ws/src/coscene_recorder/
-
-RUN bash -c 'source /opt/ros/${ROS_DISTRO}/setup.bash \
- && rosdep update \
- && rosdep install -i --from-path src --rosdistro ${ROS_DISTRO} -y \
- && colcon build --symlink-install --packages-select coscene_recorder'
-
-ENTRYPOINT [ "/ros_entrypoint.sh" ]
+CMD ["ros2", "launch", "nav_test", "test_nav.launch.py"]
