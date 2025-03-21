@@ -37,12 +37,12 @@ This repository provides a TurtleBot3 robot simulation environment and navigatio
        destroy_nodes()
        sys.exit(0)
    ```
-   - [ ] Automatic cleanup of dependent nodes
+   - [ ] Automatic cleanup of dependent nodes, make sure mcap is finalized and indexed.
 
 3. **Test Reporting** 📊 In Progress  
    - [x] JSON report generation (current)
-   - [ ] JUnit XML report format
-   - [ ] Key event markers in reports
+   - [ ] JUnit XML report format from pytest
+   - [ ] Key moment markers in reports
    ```xml
    <!-- JUnit example -->
    <testcase name="NavigationToPoint2" status="FAILED">
@@ -50,21 +50,24 @@ This repository provides a TurtleBot3 robot simulation environment and navigatio
    </testcase>
    ```
 
-### Configuration
-4. **Resource Management** ✅ Completed  
+### Load from data folder
+4. **Test Case extracted** ✅ Completed  
    ```bash
    # Single directory mounting
-   docker run -v ./unified_resources:/system/resources ...
+   docker run -v ./records/case1:/input ...
    ```
    Directory structure:
    ```
-   unified_resources/
+   /input/
    ├── maps/
-   └── worlds/
+   ├── models/
+   ├── worlds/
+   └── config/
    ```
 
 5. **Platform Integration** 🔗 Testing  
-   - [x] coBridge service exposure
+   - [ ] coBridge service exposure on regression test platform
+ - currently it's exposed from docker
    ```yaml
    # docker-compose.yml
    cobridge:

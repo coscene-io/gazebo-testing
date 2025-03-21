@@ -18,6 +18,7 @@ from launch.substitutions import (
     PathJoinSubstitution,
     EnvironmentVariable,
 )
+from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 
 
@@ -84,93 +85,143 @@ def generate_launch_description():
     # nav2_param:=$PKG_DIR/param/nav2_params.yaml
     default_nav2_param_file = path_join(pkg_dir, "param", "waffle_pi.yaml")
 
+    ##################################################################
+    # launch arguments | environment variables | launch files | nodes
+    ##################################################################
+
+    data_root_arg = DeclareLaunchArgument(
+        "data_root",
+        default_value=default_data_root,
+        description="Full path to data directory",
+    )
+    turtlebot3_model_arg = DeclareLaunchArgument(
+        "turtlebot3_model",
+        default_value=default_turtlebot3_model,
+        description="Turtlebot3 model to use",
+    )
+    world_arg = DeclareLaunchArgument(
+        "world",
+        default_value=default_world,
+        description="Full path to world file to load",
+    )
+    map_arg = DeclareLaunchArgument(
+        "map",
+        default_value=default_map,
+        description="Full path to map file to load",
+    )
+    test_points_arg = DeclareLaunchArgument(
+        "test_points",
+        default_value=default_test_points_path,
+        description="Full path to config file to load",
+    )
+    report_path_arg = DeclareLaunchArgument(
+        "report_path",
+        default_value=default_report_path,
+        description="Full path to report directory",
+    )
+    nav2_param_file_arg = DeclareLaunchArgument(
+        "nav2_param_file",
+        default_value=default_nav2_param_file,
+        description="Full path to param file to load",
+    )
+
+    # export GAZEBO_MODEL_PATH=$DATA_ROOT/models:$GAZEBO_MODEL_PATH
+    gazebo_model_path_env = set_path_env(
+        "GAZEBO_MODEL_PATH",
+        [
+            path_join(data_root, "models"),
+            path_join(pkg_turtlebot3_gazebo, "models"),
+            EnvironmentVariable("GAZEBO_MODEL_PATH", default_value=""),
+        ],
+    )
+
+    # export GAZEBO_RESOURCE_PATH=$DATA_ROOT/worlds:$GAZEBO_RESOURCE_PATH
+    gazebo_resource_path_env = set_path_env(
+        "GAZEBO_RESOURCE_PATH",
+        [
+            path_join(data_root, "worlds"),
+            # path_join(pkg_turtlebot3_gazebo, "worlds"),
+            EnvironmentVariable("GAZEBO_RESOURCE_PATH", default_value=""),
+        ],
+    )
+
+    # ros2 launch coscene_recorder record.launch.py
+    record_launch = include_pkg_launch("coscene_recorder", "record.launch.py")
+    # ros2 launch cobridge cobridge_launch.xml
+    cobridge_launch = include_pkg_launch("cobridge", "cobridge_launch.xml")
+
+    # Replace print with an ExecuteProcess to log the world file
+    world_logger = ExecuteProcess(
+        cmd=[
+            "bash",
+            "-c",
+            'echo -e "\n\033[1;33m=== LOADING GAZEBO WORLD: ${GAZEBO_WORLD} ===\033[0m\n"',
+        ],
+        name="world_path_logger",
+        output="screen",
+        additional_env={"GAZEBO_WORLD": LaunchConfiguration("world")},
+    )
+    # ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+    turtlebot3_world_launch = include_pkg_launch(
+        "nav_test",
+        "turtlebot3_world.launch.py",
+        launch_arguments={
+            "world": LaunchConfiguration("world"),
+        }.items(),
+    )
+
+    # ros2 launch turtlebot3_navigation2 navigation2.launch.py
+    turtlebot3_navigation2_launch = include_pkg_launch(
+        "turtlebot3_navigation2",
+        "navigation2.launch.py",
+        launch_arguments={
+            "map": LaunchConfiguration("map"),
+            "params_file": LaunchConfiguration("nav2_param_file"),
+            "use_sim_time": "true",
+        }.items(),
+    )
+
+    # ros2 run nav_test nav_controller
+    nav_controller_node = Node(
+        package="nav_test",
+        executable="nav_controller",
+        name="nav_controller",
+        output="screen",
+        parameters=[
+            {"config_path": LaunchConfiguration("test_points")},
+            {"report_path": LaunchConfiguration("report_path")},
+        ],
+    )
+
+    # ros2 run nav_test node_lister
+    node_lister_node = Node(
+        package="node_lister",
+        executable="node_lister",
+        name="node_lister",
+        output="screen",
+    )
+
     return LaunchDescription(
         [
-            DeclareLaunchArgument(
-                "data_root",
-                default_value=default_data_root,
-                description="Full path to data directory",
-            ),
-            DeclareLaunchArgument(
-                "turtlebot3_model",
-                default_value=default_turtlebot3_model,
-                description="Turtlebot3 model to use",
-            ),
-            DeclareLaunchArgument(
-                "world",
-                default_value=default_world,
-                description="Full path to world file to load",
-            ),
-            DeclareLaunchArgument(
-                "map",
-                default_value=default_map,
-                description="Full path to map file to load",
-            ),
-            DeclareLaunchArgument(
-                "nav2_param_file",
-                default_value=default_nav2_param_file,
-                description="Full path to param file to load",
-            ),
-            DeclareLaunchArgument(
-                "test_points",
-                default_value=default_test_points_path,
-                description="Full path to config file to load",
-            ),
-            DeclareLaunchArgument(
-                "report_path",
-                default_value=default_report_path,
-                description="Full path to report directory",
-            ),
-            # export GAZEBO_MODEL_PATH=$DATA_ROOT/models:$GAZEBO_MODEL_PATH
-            set_path_env(
-                "GAZEBO_MODEL_PATH",
-                [
-                    path_join(data_root, "models"),
-                    path_join(pkg_turtlebot3_gazebo, "models"),
-                    EnvironmentVariable("GAZEBO_MODEL_PATH", default_value=""),
-                ],
-            ),
-            # export GAZEBO_RESOURCE_PATH=$DATA_ROOT/worlds:$GAZEBO_RESOURCE_PATH
-            set_path_env(
-                "GAZEBO_RESOURCE_PATH",
-                [
-                    path_join(data_root, "worlds"),
-                    path_join(pkg_turtlebot3_gazebo, "worlds"),
-                    EnvironmentVariable("GAZEBO_RESOURCE_PATH", default_value=""),
-                ],
-            ),
-            # ros2 launch coscene_recorder record.launch.py
-            include_pkg_launch("coscene_recorder", "record.launch.py"),
-            # ros2 launch cobridge cobridge_launch.xml
-            include_pkg_launch("cobridge", "cobridge_launch.xml"),
-            # ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
-            include_pkg_launch(
-                "turtlebot3_gazebo",
-                "turtlebot3_world.launch.py",
-                launch_arguments={
-                    "world": LaunchConfiguration("world"),
-                }.items(),
-            ),
-            # ros2 launch turtlebot3_navigation2 navigation2.launch.py
-            include_pkg_launch(
-                "turtlebot3_navigation2",
-                "navigation2.launch.py",
-                launch_arguments={
-                    "map": LaunchConfiguration("map"),
-                    "params_file": LaunchConfiguration("nav2_param_file"),
-                    "use_sim_time": "true",
-                }.items(),
-            ),
-            # ros2 run nav_test nav_controller
-            Node(
-                package="nav_test",
-                executable="nav_controller",
-                name="nav_controller",
-                output="screen",
-                parameters=[
-                    {"config_path": LaunchConfiguration("test_points")},
-                    {"report_path": LaunchConfiguration("report_path")},
-                ],
-            ),
+            # arguments
+            data_root_arg,
+            turtlebot3_model_arg,
+            world_arg,
+            map_arg,
+            nav2_param_file_arg,
+            test_points_arg,
+            report_path_arg,
+            # environment variables
+            gazebo_model_path_env,
+            gazebo_resource_path_env,
+            # launch files
+            record_launch,
+            cobridge_launch,
+            world_logger,
+            turtlebot3_world_launch,
+            turtlebot3_navigation2_launch,
+            # nodes
+            nav_controller_node,
+            # node_lister_node,
         ]
     )

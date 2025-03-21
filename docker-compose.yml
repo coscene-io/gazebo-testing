@@ -5,19 +5,22 @@ x-build-args: &build-args
 
 services:
   dev:
-    image: coscene/gazebo:humble
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      network: host
-      args: *build-args
+    image: osrf/ros:humble-desktop-full
     tty: true
     stdin_open: true
+    working_dir: /action/ros2_ws
+    volumes:
+      - ./ros2_ws:/action/ros2_ws
+      - ./records/case1:/input
+      - ./output:/output
     command: ["/bin/bash"]
+    networks:
+      - rosnet
     profiles:
       - dev
 
   nav_test:
+    image: coscene/nav_test:humble
     build:
       context: .
       dockerfile: docker/Dockerfile

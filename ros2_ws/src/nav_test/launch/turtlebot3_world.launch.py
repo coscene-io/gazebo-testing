@@ -26,7 +26,6 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-    world = LaunchConfiguration("world")
     world_arg = DeclareLaunchArgument(
         "world",
         default_value=os.path.join(
@@ -50,7 +49,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, "launch", "gzserver.launch.py")
         ),
-        launch_arguments={"world": world}.items(),
+        launch_arguments={"world": LaunchConfiguration("world")}.items(),
     )
 
     gzclient_cmd = IncludeLaunchDescription(

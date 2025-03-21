@@ -25,7 +25,8 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     ros-${ROS_DISTRO}-gazebo-ros-pkgs \
     ros-${ROS_DISTRO}-image-transport \
     ros-${ROS_DISTRO}-cv-bridge \
-    ros-${ROS_DISTRO}-cobridge\
+    ros-${ROS_DISTRO}-cobridge \
+    python3-ujson \
  && echo "source /usr/share/colcon_cd/function/colcon_cd.sh" >> ~/.bashrc \
  && echo "export _colcon_cd_root=/opt/ros/${ROS_DISTRO}/" >> ~/.bashrc \
  && echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc
