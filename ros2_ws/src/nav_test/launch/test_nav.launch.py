@@ -21,32 +21,35 @@ from launch.substitutions import (
 from launch_ros.actions import Node
 
 
-def include_pkg_py_launch(package, launch_file, launch_arguments=None, **kwargs):
+def include_pkg_launch(package, launch_file, launch_arguments=None, **kwargs):
+    launch_path = os.path.join(
+        get_package_share_directory(package),
+        "launch",
+        launch_file,
+    )
     return IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory(package),
-                "launch",
-                launch_file,
-            )
+        (
+            PythonLaunchDescriptionSource(launch_path)
+            if launch_file.endswith(".py")
+            else AnyLaunchDescriptionSource(launch_path)
         ),
         launch_arguments=launch_arguments,
         **kwargs,
     )
 
 
-def include_pkg_xml_launch(package, launch_file, launch_arguments=None, **kwargs):
-    return IncludeLaunchDescription(
-        AnyLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory(package),
-                "launch",
-                launch_file,
-            )
-        ),
-        launch_arguments=launch_arguments,
-        **kwargs,
-    )
+def set_path_env(name, paths):
+    """
+    Sets environment variables by concatenating multiple paths with colons.
+    For example, if you pass ['path1', 'path2', 'path3'],
+    it will set the environment variable to 'path1:path2:path3'.
+    """
+    value = []
+    for i, path in enumerate(paths):
+        if i > 0:
+            value.append(":")  # 添加分隔符
+        value.append(path)  # 添加路径
+    return SetEnvironmentVariable(name, value)
 
 
 def path_join(*path_list: str) -> str:
@@ -80,28 +83,6 @@ def generate_launch_description():
 
     # nav2_param:=$PKG_DIR/param/nav2_params.yaml
     default_nav2_param_file = path_join(pkg_dir, "param", "waffle_pi.yaml")
-
-    env_gazebo_model_path = SetEnvironmentVariable(
-        "GAZEBO_MODEL_PATH",
-        [
-            PathJoinSubstitution([data_root, "models"]),
-            ":",
-            PathJoinSubstitution([pkg_turtlebot3_gazebo, "models"]),
-            ":",
-            EnvironmentVariable("GAZEBO_MODEL_PATH", default_value=""),
-        ],
-    )
-
-    env_gazebo_resource_path = SetEnvironmentVariable(
-        "GAZEBO_RESOURCE_PATH",
-        [
-            PathJoinSubstitution([data_root, "worlds"]),
-            ":",
-            PathJoinSubstitution([pkg_turtlebot3_gazebo, "worlds"]),
-            ":",
-            EnvironmentVariable("GAZEBO_RESOURCE_PATH", default_value=""),
-        ],
-    )
 
     return LaunchDescription(
         [
@@ -141,23 +122,37 @@ def generate_launch_description():
                 description="Full path to report directory",
             ),
             # export GAZEBO_MODEL_PATH=$DATA_ROOT/models:$GAZEBO_MODEL_PATH
-            env_gazebo_model_path,
+            set_path_env(
+                "GAZEBO_MODEL_PATH",
+                [
+                    path_join(data_root, "models"),
+                    path_join(pkg_turtlebot3_gazebo, "models"),
+                    EnvironmentVariable("GAZEBO_MODEL_PATH", default_value=""),
+                ],
+            ),
             # export GAZEBO_RESOURCE_PATH=$DATA_ROOT/worlds:$GAZEBO_RESOURCE_PATH
-            env_gazebo_resource_path,
+            set_path_env(
+                "GAZEBO_RESOURCE_PATH",
+                [
+                    path_join(data_root, "worlds"),
+                    path_join(pkg_turtlebot3_gazebo, "worlds"),
+                    EnvironmentVariable("GAZEBO_RESOURCE_PATH", default_value=""),
+                ],
+            ),
             # ros2 launch coscene_recorder record.launch.py
-            include_pkg_py_launch("coscene_recorder", "record.launch.py"),
+            include_pkg_launch("coscene_recorder", "record.launch.py"),
             # ros2 launch cobridge cobridge_launch.xml
-            include_pkg_xml_launch("cobridge", "cobridge_launch.xml"),
+            include_pkg_launch("cobridge", "cobridge_launch.xml"),
             # ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
-            include_pkg_py_launch(
-                "nav_test",
+            include_pkg_launch(
+                "turtlebot3_gazebo",
                 "turtlebot3_world.launch.py",
                 launch_arguments={
                     "world": LaunchConfiguration("world"),
                 }.items(),
             ),
             # ros2 launch turtlebot3_navigation2 navigation2.launch.py
-            include_pkg_py_launch(
+            include_pkg_launch(
                 "turtlebot3_navigation2",
                 "navigation2.launch.py",
                 launch_arguments={
