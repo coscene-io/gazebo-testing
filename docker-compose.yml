@@ -31,7 +31,7 @@ services:
     environment:
       - TURTLEBOT3_MODEL=waffle_pi
     command: >
-      ros2 launch nav_test test_nav.launch.py --debug
+      ros2 launch nav_test test_nav.launch.py
     volumes:
       - ./output:/output
       - ./records/case1:/input

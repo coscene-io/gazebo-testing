@@ -1,6 +1,4 @@
-from collections.abc import Iterable
 import os
-from typing import Optional, Tuple
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -10,15 +8,14 @@ from launch.actions import (
     SetEnvironmentVariable,
 )
 from launch.launch_description_sources import (
-    PythonLaunchDescriptionSource,
     AnyLaunchDescriptionSource,
+    PythonLaunchDescriptionSource,
 )
 from launch.substitutions import (
+    EnvironmentVariable,
     LaunchConfiguration,
     PathJoinSubstitution,
-    EnvironmentVariable,
 )
-from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 
 
@@ -150,17 +147,6 @@ def generate_launch_description():
     # ros2 launch cobridge cobridge_launch.xml
     cobridge_launch = include_pkg_launch("cobridge", "cobridge_launch.xml")
 
-    # Replace print with an ExecuteProcess to log the world file
-    world_logger = ExecuteProcess(
-        cmd=[
-            "bash",
-            "-c",
-            'echo -e "\n\033[1;33m=== LOADING GAZEBO WORLD: ${GAZEBO_WORLD} ===\033[0m\n"',
-        ],
-        name="world_path_logger",
-        output="screen",
-        additional_env={"GAZEBO_WORLD": LaunchConfiguration("world")},
-    )
     # ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
     turtlebot3_world_launch = include_pkg_launch(
         "nav_test",
@@ -215,13 +201,12 @@ def generate_launch_description():
             gazebo_model_path_env,
             gazebo_resource_path_env,
             # launch files
-            record_launch,
-            cobridge_launch,
-            world_logger,
             turtlebot3_world_launch,
             turtlebot3_navigation2_launch,
+            record_launch,
+            cobridge_launch,
             # nodes
+            node_lister_node,
             nav_controller_node,
-            # node_lister_node,
         ]
     )
