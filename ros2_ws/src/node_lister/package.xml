@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>node_lister</name>
+  <version>0.0.1</version>
+  <description>ROS2 package to monitor active/inactive nodes and publish node list.</description>
+  <maintainer email="your_email@example.com">Your Name</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- ROS 2 runtime dependencies -->
+  <depend>rclpy</depend>
+  <depend>builtin_interfaces</depend>
+  <exec_depend>node_msgs</exec_depend>
+
+    <export>
+    <build_type>ament_python</build_type>
+  </export>
+
+</package>
