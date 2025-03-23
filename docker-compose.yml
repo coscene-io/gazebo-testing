@@ -4,39 +4,27 @@ x-build-args: &build-args
   all_proxy: socks5://127.0.0.1:18179
 
 services:
-  dev:
-    image: osrf/ros:humble-desktop-full
-    tty: true
-    stdin_open: true
-    working_dir: /action/ros2_ws
-    volumes:
-      - ./ros2_ws:/action/ros2_ws
-      - ./records/case1:/input
-      - ./output:/output
-    command: ["/bin/bash"]
-    networks:
-      - rosnet
-    profiles:
-      - dev
-
   nav_test:
     image: coscene/nav_test:humble
     build:
       context: .
       dockerfile: docker/Dockerfile
       network: host
+      target: turtlebot3
       args: *build-args
     ports:
       - 21274:21274
     environment:
+      - ROS_DISTRO=humble
       - TURTLEBOT3_MODEL=waffle_pi
     command: >
-      ros2 launch nav_test test_nav.launch.py
+      bash -c 'source /opt/ros/$${ROS_DISTRO}/setup.bash && colcon build && ros2 launch nav_test test_nav.launch.py'
     volumes:
-      - ./output:/output
+      - ./ros2_ws:/action/ros2_ws
       - ./records/case1:/input
-    networks:
-      - rosnet
-
-networks:
-  rosnet:
+      - ./output:/output
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./ros2_ws/src/
+          target: /action/ros2_ws/src/

@@ -10,6 +10,7 @@
   <depend>rclpy</depend>
   <depend>builtin_interfaces</depend>
   <exec_depend>node_msgs</exec_depend>
+  <depend>lifecycle_msgs</depend>
 
     <export>
     <build_type>ament_python</build_type>
