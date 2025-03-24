@@ -81,13 +81,13 @@
     "3D!24aa62h": {
       "cameraState": {
         "perspective": true,
-        "distance": 10.017350908477653,
-        "phi": 0.000057349190307453494,
-        "thetaOffset": 37.13934588749163,
+        "distance": 10.52191635185053,
+        "phi": 0.00005729832627056611,
+        "thetaOffset": 37.49272428251431,
         "targetOffset": [
-          -0.9481684459189953,
-          2.2969209575499043,
-          -1.0379557046302383e-9
+          -0.6373631784395586,
+          2.154156562019457,
+          -1.0379556890038423e-9
         ],
         "target": [
           0,
@@ -149,13 +149,13 @@
         }
       },
       "publish": {
-        "type": "pose_estimate",
+        "type": "pose",
         "poseTopic": "/move_base_simple/goal",
         "pointTopic": "/clicked_point",
         "poseEstimateTopic": "/initialpose",
-        "poseEstimateXDeviation": 0.5,
-        "poseEstimateYDeviation": 0.5,
-        "poseEstimateThetaDeviation": 0.26179939
+        "poseEstimateXDeviation": -5.5,
+        "poseEstimateYDeviation": -7.5,
+        "poseEstimateThetaDeviation": -5.73820061
       },
       "scene": {
         "backgroundColor": "#000000",
@@ -630,7 +630,7 @@
           "colorMap": "turbo",
           "colorMode": "flat",
           "decayTime": 0,
-          "flatColor": "#eba709",
+          "flatColor": "#33ff66ff",
           "pointShape": "circle",
           "pointSize": 5,
           "visible": true
@@ -752,26 +752,29 @@
           "frameLocked": false,
           "maxColor": "#4f9fffff",
           "modifyHeight": 1,
-          "minColor": "#ffffff00"
+          "minColor": "#ffffff00",
+          "colorMode": "custom"
         },
         "/local_costmap/clearing_endpoints": {
           "visible": false
         },
         "/global_costmap/costmap": {
-          "visible": false,
-          "maxColor": "#84a5ffff",
+          "visible": true,
+          "maxColor": "#85a5ff80",
           "colorMode": "custom",
           "alpha": 0.7000000000000001,
-          "modifyHeight": -3.469446951953614e-18
+          "modifyHeight": -3.469446951953614e-18,
+          "minColor": "#ffffff80"
         },
         "/global_costmap/clearing_endpoints": {
           "visible": false,
           "colorField": "z",
           "colorMode": "colormap",
-          "colorMap": "turbo"
+          "colorMap": "turbo",
+          "pointShape": "circle"
         },
         "/local_plan": {
-          "visible": true,
+          "visible": false,
           "type": "line",
           "arrowScale": [
             1,
@@ -788,19 +791,31 @@
           "visible": false
         },
         "/received_global_plan": {
-          "visible": false
+          "visible": true,
+          "type": "line",
+          "gradient": [
+            "#ff0033ff",
+            "#ffee00ff"
+          ],
+          "arrowScale": [
+            0.15,
+            0.15,
+            0.15
+          ],
+          "lineWidth": 0.05
         },
         "/plan_smoothed": {
           "visible": false
         },
         "/plan": {
-          "visible": true
+          "visible": false
         },
         "/local_costmap/published_footprint": {
           "visible": false
         },
         "/global_costmap/published_footprint": {
-          "visible": false
+          "visible": true,
+          "lineWidth": 0.03
         },
         "/move_base_simple/goal": {
           "visible": false
@@ -814,7 +829,8 @@
         },
         "/goal_pose": {
           "visible": true,
-          "axisScale": 10.2
+          "axisScale": 10.2,
+          "type": "axis"
         },
         "/amcl_pose": {
           "visible": false
@@ -1301,7 +1317,7 @@
       "diffMethod": "custom",
       "diffTopicPath": "",
       "showFullMessageForDiff": false,
-      "topicPath": "/diagnostics.status"
+      "topicPath": "/cmd_vel"
     },
     "Plot!t0ra0d": {
       "foxglovePanelTitle": "IMU",
@@ -1340,7 +1356,7 @@
       "first": "3D!24aa62h",
       "second": "Tab!4wxpax",
       "direction": "column",
-      "splitPercentage": 63.57487922705314
+      "splitPercentage": 60.96618357487923
     },
     "second": {
       "first": "Image!3c2sno8",
@@ -1354,7 +1370,7 @@
               "direction": "column"
             },
             "direction": "row",
-            "splitPercentage": 58.21917808219176
+            "splitPercentage": 57.76255707762555
           },
           "second": "RawMessages!3bnxls2",
           "direction": "column",
@@ -1368,7 +1384,7 @@
       "splitPercentage": 29.082125603864732
     },
     "direction": "row",
-    "splitPercentage": 69.08979639094262
+    "splitPercentage": 68.01761144744084
   },
   "playbackConfig": {
     "speed": 1

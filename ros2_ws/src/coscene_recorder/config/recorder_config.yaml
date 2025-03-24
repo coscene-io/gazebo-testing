@@ -2,31 +2,31 @@
 record_dir: "/output/mcap"
 
 # List of topics to record (leave empty to record all topics)
-topics:
-  - /amcl_pose
-  - /cmd_vel_nav
-  - /error_status
-  - /global_costmap/costmap
-  - /global_costmap/costmap_updates
-  - /global_costmap/footprint
-  - /global_costmap/published_footprint
-  - /goal_pose
-  - /local_costmap/costmap
-  - /local_costmap/costmap_updates
-  - /local_costmap/footprint
-  - /local_costmap/published_footprint
-  - /local_plan
-  - /map
-  - /scan
-  - /odom
-  - /plan
-  - /plan_smoothed
-  - /received_global_plan
-  - /robot_description
-  - /scan
-  - /tf
-  - /tf_static
-  - /rosout
+# topics:
+#   - /amcl_pose
+#   - /cmd_vel_nav
+#   - /error_status
+#   - /global_costmap/costmap
+#   - /global_costmap/costmap_updates
+#   - /global_costmap/footprint
+#   - /global_costmap/published_footprint
+#   - /goal_pose
+#   - /local_costmap/costmap
+#   - /local_costmap/costmap_updates
+#   - /local_costmap/footprint
+#   - /local_costmap/published_footprint
+#   - /local_plan
+#   - /map
+#   - /scan
+#   - /odom
+#   - /plan
+#   - /plan_smoothed
+#   - /received_global_plan
+#   - /robot_description
+#   - /scan
+#   - /tf
+#   - /tf_static
+#   - /rosout
 
 use_sim_time: true
 # Single file size limit (bytes)
