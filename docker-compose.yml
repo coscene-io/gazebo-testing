@@ -1,0 +1,18 @@
+services:
+  nav_test:
+    image: coscene/nav_test:humble
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: turtlebot3
+    ports:
+      - 21274:21274
+    environment:
+      - ROS_DISTRO=humble
+      - TURTLEBOT3_MODEL=waffle_pi
+    command: >
+      bash -c 'source /opt/ros/$${ROS_DISTRO}/setup.bash && colcon build && ros2 launch nav_test test_nav.launch.py'
+    volumes:
+      - ./ros2_ws:/action/ros2_ws
+      - ./records/case1:/input
+      - ./output:/output
