@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 from launch import LaunchDescription
-from launch_ros.actions import Node
-from ament_index_python.packages import get_package_share_directory
+from launch_ros.actions import Node  # type: ignore
+from ament_index_python.packages import get_package_share_directory  # type: ignore
 import os
 
 

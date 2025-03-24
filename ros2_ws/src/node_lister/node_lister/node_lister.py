@@ -1,16 +1,15 @@
-import rclpy
-from node_msgs.msg import NodeList, NodeStatus
-from rclpy.node import Node
-from rclpy.time import Time
-from rclpy.duration import Duration
 from dataclasses import dataclass
-from typing import Dict, Optional
-from lifecycle_msgs.msg import State, TransitionEvent
-from lifecycle_msgs.srv import GetState
-from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
-import time
 from datetime import datetime
+from typing import Dict
 
+import rclpy  # type: ignore
+from lifecycle_msgs.msg import TransitionEvent  # type: ignore
+from lifecycle_msgs.srv import GetState  # type: ignore
+from node_msgs.msg import NodeList, NodeStatus
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup  # type: ignore
+from rclpy.executors import MultiThreadedExecutor  # type: ignore
+from rclpy.node import Node  # type: ignore
+from rclpy.time import Time  # type: ignore
 
 # Lifecycle states as defined in lifecycle_msgs/State.msg
 LIFECYCLE_STATES = {
@@ -303,9 +302,6 @@ def main(args=None):
 
     # Create the node
     node = NodeMonitor()
-
-    # Use a MultiThreadedExecutor for handling service calls concurrently
-    from rclpy.executors import MultiThreadedExecutor
 
     executor = MultiThreadedExecutor()
     executor.add_node(node)
