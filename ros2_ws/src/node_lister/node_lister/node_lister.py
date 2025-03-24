@@ -105,7 +105,7 @@ def to_iso8601(ros_time):
 
     # Format with microsecond precision (ISO8601)
     microseconds = nanoseconds // 1000
-    return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class NodeMonitor(Node):
@@ -292,7 +292,7 @@ class NodeMonitor(Node):
         # Publish the NodeList message
         self.publisher.publish(node_list_msg)
         # Log the publication
-        self.get_logger().info(
+        self.get_logger().debug(
             f"Published /node_list with {node_list_msg.total_nodes} nodes "
             f"({node_list_msg.active_nodes} active, {node_list_msg.inactive_nodes} inactive)."
         )

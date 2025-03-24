@@ -14,7 +14,7 @@ from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from nav2_msgs.action import NavigateToPose
 from rclpy.action import ActionClient
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, ReliabilityPolicy
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from std_msgs.msg import String
 
 from nav_test.ros_utils import load_pose
@@ -137,8 +137,12 @@ class NavController(Node):
             initial_pose_msg.header.stamp = self.get_clock().now().to_msg()
 
             # Create publisher using AMCL's expected QoS settings
+            initial_pose_qos = QoSProfile(depth=1)
+            initial_pose_qos.reliability = ReliabilityPolicy.RELIABLE
+            initial_pose_qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
+
             pub = self.create_publisher(
-                PoseWithCovarianceStamped, "/initialpose", QoSProfile(depth=1)
+                PoseWithCovarianceStamped, "/initialpose", initial_pose_qos
             )
 
             # First, check if the topic has subscribers (AMCL is listening)
@@ -355,35 +359,20 @@ class NavController(Node):
 
 
 def main(args=None):
-    rclpy_initialized = False
-    controller = None
-
     try:
         rclpy.init(args=args)
-        rclpy_initialized = True
-        controller = NavController()
-        rclpy.spin(controller)
-
+        node = NavController()
+        rclpy.spin(node)
     except KeyboardInterrupt:
-        if controller:
-            controller.get_logger().info("User terminated operation")
-        else:
-            rclpy.logging.get_logger("nav_controller").warning(
-                "Started but interrupted before starting"
-            )
-
+        pass
     except Exception as e:
-        if controller:
-            controller.get_logger().error(f"Runtime exception: {str(e)}")
-        else:
-            error_msg = f"Startup failed: {str(e)}"
-            rclpy.logging.get_logger("nav_controller").fatal(error_msg)
-            print(f"\033[31mFATAL: {error_msg}\033[0m", file=sys.stderr)
-
+        print(f"Unexpected error: {e}")
     finally:
-        if controller is not None:
-            controller.destroy_node()
-        if rclpy_initialized:
+        # Ensure the node is destroyed before calling shutdown
+        if "node" in locals():
+            node.destroy_node()
+        # Check if ROS context is initialized before shutdown
+        if rclpy.ok():
             rclpy.shutdown()
 
 
