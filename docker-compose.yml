@@ -1,10 +1,11 @@
 services:
   nav_test:
     image: ghcr.io/coscene-io/ros:humble-turtlebot3
-    build:
-      context: .
+    # build:
+    #   context: .
     ports:
-      - 21274:21274
+      - "21274:21274" # Map to coridge port
+      - "8000:8000" # Map to HTTP server port
     environment:
       - ROS_DISTRO=humble
       - TURTLEBOT3_MODEL=waffle_pi

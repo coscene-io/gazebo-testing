@@ -2,7 +2,6 @@
 import json
 import os
 import random
-import sys
 import time
 from datetime import datetime
 from uuid import uuid4
@@ -14,7 +13,7 @@ from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from nav2_msgs.action import NavigateToPose
 from rclpy.action import ActionClient
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import String
 
 from nav_test.ros_utils import load_pose
@@ -72,7 +71,7 @@ class TaskManager:
 
 class NavController(Node):
     def __init__(self):
-        super().__init__("advanced_nav_controller")
+        super().__init__("nav_controller")
 
         self.declare_parameter("config_path", "")
         self.declare_parameter("report_path", "/home/qingyu")
@@ -80,6 +79,7 @@ class NavController(Node):
         try:
             # Get configuration file path
             self.config_path = self.get_parameter("config_path").value
+            print("The config path is: " + self.config_path)
             if not os.path.exists(self.config_path):
                 raise FileNotFoundError(
                     f"Configuration file not found: {self.config_path}"

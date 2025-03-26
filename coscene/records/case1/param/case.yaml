@@ -1,0 +1,32 @@
+/nav_controller:
+  ros__parameters:
+    config_path: /cos/files/config/test_points.yaml
+    report_path: /cos/artifacts/reports
+
+/marker_publisher:
+  ros__parameters:
+    mesh_resource_dir: /cos/files/models/RMUL2024_world/meshes  # must be set
+    marker: |
+      mesh_resource: RMUL_2024.stl
+      scale:
+        x: .001
+        y: .001
+        z: .001
+      color:
+        r: .7
+        g: .7
+        b: .7
+        a: 1.0
+
+      frame_id: "map"
+      child_frame_id: stl_map
+      transform:
+        translation:
+          x: 6.53
+          y: 2.28
+          z: 1.5
+        rotation:
+          x: 0.3093
+          y: 0.9511
+          z: 0.0
+          w: 0.0
