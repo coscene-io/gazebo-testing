@@ -158,6 +158,14 @@
           <ros>
             <!-- <namespace>/tb3</namespace> -->
             <remapping>~/out:=scan</remapping>
+            <qos>
+              <publisher>
+                <durability>transient_local</durability>
+                <reliability>reliable</reliability>
+                <history>keep_last</history>
+                <depth>5</depth>
+              </publisher>
+            </qos>
           </ros>
           <output_type>sensor_msgs/LaserScan</output_type>
           <frame_name>base_scan</frame_name>

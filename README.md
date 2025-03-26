@@ -24,7 +24,10 @@ This repository provides a TurtleBot3 robot simulation environment and navigatio
 
 ### High Priority
 1. **Topic Enhancement** 🔄 Developing  
-   - [ ] Add support for `/plan` visualization topics
+   - [x] Add support for `/plan` visualization topics
+   ```
+      use /received_global_plan instead. /plan doesn't contain frame.id in every pose. 
+   ```
    - [ ] Implement 3D map topics (OctoMap/PointCloud2)
    - [ ] Integrate camera topics (`/camera/rgb/image_raw`)
 
