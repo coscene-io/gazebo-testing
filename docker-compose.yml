@@ -6,12 +6,17 @@ services:
       dockerfile: docker/Dockerfile
       target: turtlebot3
     ports:
-      - 21274:21274
+      - "21274:21274"  # 映射 ROSBridge 端口
+      - "8000:8000"    # 映射 HTTP 服务器端口
     environment:
       - ROS_DISTRO=humble
       - TURTLEBOT3_MODEL=waffle_pi
     command: >
-      bash -c 'source /opt/ros/$${ROS_DISTRO}/setup.bash && colcon build && ros2 launch nav_test test_nav.launch.py'
+      bash -c "source /opt/ros/$${ROS_DISTRO}/setup.bash &&
+               colcon build &&
+               python3 -m http.server 8000 --directory /input/models/RMUL2024_world/meshes & 
+               ros2 launch nav_test test_nav.launch.py &
+               ros2 launch stl_visualizer visualize.launch.py"
     volumes:
       - ./ros2_ws:/action/ros2_ws
       - ./records/case1:/input
