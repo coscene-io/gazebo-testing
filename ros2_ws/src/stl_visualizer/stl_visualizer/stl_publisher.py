@@ -18,15 +18,16 @@ class STLVisualizer(Node):
         static_transform.header.stamp = self.get_clock().now().to_msg()
         static_transform.header.frame_id = "map"
         static_transform.child_frame_id = "link_3"
-        static_transform.transform.translation.x = 0.0
-        static_transform.transform.translation.y = 0.0
-        static_transform.transform.translation.z = 1.0
+        static_transform.transform.translation.x = 6.53
+        static_transform.transform.translation.y = 2.28
+        static_transform.transform.translation.z = 1.5
 
-        # 绕X轴旋转180度（π弧度）
-        static_transform.transform.rotation.x = 0.0
-        static_transform.transform.rotation.y = 0.0
+        
+        static_transform.transform.rotation.x = 0.3090
+        static_transform.transform.rotation.y = 0.9511
         static_transform.transform.rotation.z = 0.0
         static_transform.transform.rotation.w = 0.0
+    
   
         
         # 发布静态TF
