@@ -13,14 +13,14 @@ jobs:
     strategy:
       matrix:
         ros_distro: ["humble"]
-        target: ["base", "turtlebot3", "mujoco"]
+        target:
+          # - base
+          - turtlebot3
         include:
-          - ros_distro: "humble"
-            target: "base"
+          # - ros_distro: "humble"
+          #   target: "base"
           - ros_distro: "humble"
             target: "turtlebot3"
-          - ros_distro: "humble"
-            target: "mujoco"
 
     steps:
       - name: Checkout
@@ -37,16 +37,14 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Set image name with timestamp
+        id: image_meta
         run: |
           if [ "${{ matrix.target }}" = "base" ]; then
-            echo "IMAGE_TAG=$${ matrix.ros_distro }" >> $GITHUB_ENV
+            echo "image_tag=${{ matrix.ros_distro }}" >> $GITHUB_OUTPUT
           else
-            echo "IMAGE_TAG=$${ matrix.ros_distro }-$${ matrix.target }" >> $GITHUB_ENV
+            echo "image_tag=${{ matrix.ros_distro }}-${{ matrix.target }}" >> $GITHUB_OUTPUT
           fi
-
-      - name: Get short commit hash
-        run: |
-          echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "commit_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Build and Push
         uses: docker/build-push-action@v4
@@ -57,5 +55,5 @@ jobs:
           target: ${{ matrix.target }}
           push: true
           tags: |
-            ${{ vars.DOCKER_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ vars.IMAGE_TAG }}
-            ${{ vars.DOCKER_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ vars.IMAGE_TAG }}-${{ env.COMMIT_SHA }}
+            ${{ vars.DOCKER_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ steps.image_meta.outputs.image_tag }}
+            ${{ vars.DOCKER_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ steps.image_meta.outputs.image_tag }}-${{ steps.image_meta.outputs.commit_sha }}
