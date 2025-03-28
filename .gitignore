@@ -2,3 +2,6 @@ output
 build
 install
 log
+.secrets
+.vars
+.env

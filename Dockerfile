@@ -22,8 +22,8 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
  && echo "export _colcon_cd_root=/opt/ros/${ROS_DISTRO}/" >> ~/.bashrc \
  && echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc
 
-COPY ./docker/ros_entrypoint.sh /
-ENTRYPOINT [ "/ros_entrypoint.sh" ]
+COPY ./entrypoint.sh /
+ENTRYPOINT [ "/entrypoint.sh" ]
 
 WORKDIR /action/ros2_ws
 
