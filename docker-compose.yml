@@ -1,6 +1,6 @@
 services:
   nav_test:
-    image: coscene/nav_test:humble
+    image: ghcr.io/coscene-io/ros:humble-turtlebot3
     build:
       context: .
       dockerfile: docker/Dockerfile
