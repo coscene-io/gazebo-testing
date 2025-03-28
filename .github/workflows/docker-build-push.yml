@@ -10,6 +10,18 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ros_distro: ["humble"]
+        target: ["base", "turtlebot3", "mujoco"]
+        include:
+          - ros_distro: "humble"
+            target: "base"
+          - ros_distro: "humble"
+            target: "turtlebot3"
+          - ros_distro: "humble"
+            target: "mujoco"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -20,13 +32,21 @@ jobs:
       - name: Login to Private Docker Registry
         uses: docker/login-action@v2
         with:
-          registry: ${{ secrets.DOCKER_REGISTRY }}
+          registry: ${{ vars.DOCKER_REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Set image name with timestamp
         run: |
-          echo "IMAGE_NAME=${{ secrets.DOCKER_REGISTRY }}/gazebo-turtlebot:$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+          if [ "${{ matrix.target }}" = "base" ]; then
+            echo "IMAGE_TAG=$${ matrix.ros_distro }" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=$${ matrix.ros_distro }-$${ matrix.target }" >> $GITHUB_ENV
+          fi
+
+      - name: Get short commit hash
+        run: |
+          echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Build and Push
         uses: docker/build-push-action@v4
@@ -34,7 +54,8 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
+          target: ${{ matrix.target }}
           push: true
           tags: |
-            ${{ env.IMAGE_NAME }}
-            ${{ secrets.DOCKER_REGISTRY }}/gazebo-turtlebot:latest
+            ${{ vars.DOCKER_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ vars.IMAGE_TAG }}
+            ${{ vars.DOCKER_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ vars.IMAGE_TAG }}-${{ env.COMMIT_SHA }}
