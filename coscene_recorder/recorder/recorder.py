@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
-from rosbag2_py import RecordOptions, StorageOptions, Recorder
+from rosbag2_py import RecordOptions, StorageOptions, Recorder, Reindexer
 import yaml
 import signal
 import sys
@@ -13,6 +13,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional
 from datetime import datetime
+import subprocess
 import random
 import string
 import os
@@ -123,15 +124,24 @@ class RecorderNode(Node):
 
     def start_recording(self):
         try:
+            self.output_dir = self._get_unique_base_dir()  
             storage_options = StorageOptions(
-                uri=str(self._get_unique_base_dir()),  # Convert PosixPath to string
+                uri=str(self.output_dir),
                 storage_id="mcap",
                 max_bagfile_size=self.config.max_split_size,
                 max_bagfile_duration=self.config.max_bag_duration,
             )
             self.get_logger().info(f"Recording to directory: {storage_options.uri}")
 
-            # Start recording with the new storage options
+            # write the mcap folder path to a file. This temporary file is used by the reindex script
+            try:
+                with open("/tmp/latest_bag_path.txt", "w") as f:
+                    f.write(str(self.output_dir))
+                self.get_logger().info(f"Saved latest bag path to /tmp/latest_bag_path.txt")
+            except Exception as e:
+                self.get_logger().warn(f"Failed to write latest bag path file: {e}")
+            
+
             self.recorder.record(
                 storage_options,
                 self.config.record_options,
@@ -154,6 +164,8 @@ class RecorderNode(Node):
             self.get_logger().info("Recording stopped successfully")
         except Exception as e:
             self.get_logger().error(f"Error stopping recording: {e}")
+        finally:
+            self.reindex_bag_file()
 
     def signal_handler(self, sig, frame):
         """Handle signals for graceful shutdown"""
@@ -162,6 +174,23 @@ class RecorderNode(Node):
         self.ensure_stop_recording()
         # Then shutdown ROS
         rclpy.shutdown()
+    
+    def reindex_bag_file(self):
+        if hasattr(self, "output_dir") and self.output_dir.exists():
+            try:
+                self.get_logger().info(f"Attempting to reindex bag file in: {self.output_dir}")
+                
+                storage_options = StorageOptions(
+                    uri=str(self.output_dir),
+                    storage_id="mcap"
+                )
+                
+                reindexer = Reindexer()
+                reindexer.reindex(storage_options)
+                
+                self.get_logger().info("Bag file reindexed successfully.")
+            except Exception as e:
+                self.get_logger().error(f"Failed to reindex bag file: {e}")
 
 
 def main(args=None):

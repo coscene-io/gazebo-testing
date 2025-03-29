@@ -234,14 +234,17 @@ def generate_launch_description():
             nav2_params_arg,
             main_params_arg,
             mesh_server_url_arg,
+
             # environment variables
             gazebo_model_path_env,
             gazebo_resource_path_env,
+
             # launch files
             turtlebot3_world_launch,
             turtlebot3_navigation2_launch,
             record_launch,
             cobridge_launch,
+            
             # nodes
             node_lister_node,
             nav_controller_node,

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  colcon-build-and-test:
+  colcon-build-and-deploy:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/coscene-io/ros:humble-turtlebot3

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 mkdir -p /action/packages
 tar xzf /cos/bundles/install.tar.gz -C /action/packages

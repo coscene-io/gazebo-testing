@@ -5,7 +5,7 @@ services:
       context: .
     ports:
       - "21274:21274" #  Bridge 
-      - "8000:8000" #  HTTP serve for the costudio gett the gazebo display file
+      - "8000:8000" #  HTTP serve mesh resources
     environment:
       - ROS_DISTRO=humble
       - TURTLEBOT3_MODEL=waffle_pi
@@ -22,6 +22,7 @@ services:
       - ./output/bundles:/cos/bundles
       - ./output/records:/cos/outputs
       - ./output/reports:/cos/artifacts
+    stop_grace_period: 20s
 
 volumes:
   gazebo-testing:

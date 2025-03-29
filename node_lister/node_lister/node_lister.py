@@ -61,7 +61,7 @@ class NodeMonitor(Node):
             depth=1,
             durability=DurabilityPolicy.TRANSIENT_LOCAL,
             reliability=ReliabilityPolicy.RELIABLE,
-            lifespan=Duration(seconds=self.update_period),
+            lifespan=Duration(seconds=self.update_period * 3),
             history=HistoryPolicy.KEEP_LAST,
         )
 
