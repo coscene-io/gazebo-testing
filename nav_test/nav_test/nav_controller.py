@@ -327,7 +327,6 @@ class NavController(Node):
                     self.get_logger().error(f"Invalid end_time in task {task['id']}")
                     task["end_time"] = datetime.now()
 
-            # 修正总时间计算
             total_tasks = len(self.task_mgr.history)
             failures = sum(1 for t in self.task_mgr.history if t["status"] == "failed")
             total_time = sum(
