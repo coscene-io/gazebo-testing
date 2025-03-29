@@ -60,7 +60,7 @@ def generate_launch_description():
     data_root = LaunchConfiguration("data_root")
 
     # data_root:=$DATA_ROOT
-    default_data_root = "/input"
+    default_data_root = "/cos/files"
 
     # turtlebot3_model:=waffle_pi
     default_turtlebot3_model = "waffle_pi"
@@ -68,8 +68,8 @@ def generate_launch_description():
     # test_points:=$DATA_ROOT/config/test_points.yaml
     default_test_points_path = path_join(data_root, "config", "test_points.yaml")
 
-    # report_path:=/output/reports
-    default_report_path = "/output/reports"
+    # report_path:=/cos/artifacts/reports
+    default_report_path = "/cos/artifacts/reports"
 
     # world:=$DATA_ROOT/worlds/RMUL2024_world_dynamic_obstacles.world
     default_world = path_join(

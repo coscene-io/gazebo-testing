@@ -3,8 +3,6 @@ services:
     image: ghcr.io/coscene-io/ros:humble-turtlebot3
     build:
       context: .
-      dockerfile: docker/Dockerfile
-      target: turtlebot3
     ports:
       - 21274:21274
     environment:
@@ -12,17 +10,20 @@ services:
       - TURTLEBOT3_MODEL=waffle_pi
     command: >
       bash -c '
-        source /opt/ros/$${ROS_DISTRO}/setup.bash &&
+        #source /opt/ros/${ROS_DISTRO}/setup.bash &&
         colcon build &&
-        source /action/ros2_ws/install/setup.bash &&
-        ros2 launch nav_test test_nav.launch.py
+        tar czf /cos/bundles/install.tar.gz -C ./install . &&
+        /scripts/run.sh
       '
     volumes:
-      - ros2_ws:/action/ros2_ws
+      - gazebo-testing:/action/ros2_ws
       - .:/action/ros2_ws/src
-      - ./records/case1:/input
-      - ./output:/output
+      - ./coscene/records/case1:/cos/files
+      - ./output/bundles:/cos/bundles
+      - ./output/records:/cos/outputs
+      - ./output/reports:/cos/artifacts
 
 volumes:
-  ros2_ws:
+  gazebo-testing:
+    name: gazebo-testing
     driver: local

@@ -1,5 +1,5 @@
 # Recording file storage directory
-record_dir: "/output/mcap"
+record_dir: "/cos/outputs/mcap"
 
 # List of topics to record (leave empty to record all topics)
 # topics:

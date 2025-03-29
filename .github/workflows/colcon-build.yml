@@ -1,0 +1,47 @@
+name: Build and Upload ROS 2 Package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  colcon-build-and-deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/coscene-io/ros:humble-turtlebot3
+
+    steps:
+      - uses: actions/checkout@v4
+        # with:
+        #   path: src
+
+      - name: Build ROS 2 workspace
+        run: |
+          bash -c ' 
+            source /opt/ros/${ROS_DISTRO}/setup.bash
+            colcon build
+            tar czf install.tar.gz -C ./install .
+          '
+
+      - name: Download cos cli
+        run: |
+          curl https://coscene-artifacts-production.oss-cn-hangzhou.aliyuncs.com/cos/linux/amd64/latest/cos -o /bin/cos
+          chmod +x /bin/cos
+          mkdir -p $HOME/.cos
+          cat > $HOME/.cos/config.yaml << EOF
+          platform:
+            endpoint: ${{ vars.COSCENE_ENDPOINT }}
+            project: ${{ vars.COSCENE_PROJECT }}
+            token: ${{ secrets.COSCENE_ACCESS_TOKEN }}
+          EOF
+
+      - name: Push and Trigger Test
+        run: |
+          ls -l install.tar.gz coscene/matrix/config.yaml ./install
+          echo "
+          /bin/cos test run \
+            --test-config coscene/matrix/config.yaml \
+            -b install.tar.gz
+          "
+          #/bin/cos test run \
+          #  --test-config src/coscene/matrix/config.yaml \
+          #  -b install.tar.gz
