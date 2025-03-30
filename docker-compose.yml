@@ -10,7 +10,6 @@ services:
       - TURTLEBOT3_MODEL=waffle_pi
     command: >
       bash -c '
-        #source /opt/ros/${ROS_DISTRO}/setup.bash &&
         colcon build &&
         tar czf /cos/bundles/install.tar.gz -C ./install . &&
         /scripts/run.sh

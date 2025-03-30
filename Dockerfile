@@ -39,4 +39,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY ./scripts /scripts
 ENTRYPOINT [ "/scripts/entrypoint.sh" ]
 
+CMD [ "/scripts/run.sh" ]
+
 WORKDIR /action/ros2_ws

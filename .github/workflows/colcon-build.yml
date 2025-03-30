@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  colcon-build-and-deploy:
+  colcon-build-and-test:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/coscene-io/ros:humble-turtlebot3
@@ -42,6 +42,3 @@ jobs:
             --test-config coscene/matrix/config.yaml \
             -b install.tar.gz
           "
-          #/bin/cos test run \
-          #  --test-config src/coscene/matrix/config.yaml \
-          #  -b install.tar.gz
