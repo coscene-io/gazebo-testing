@@ -13,14 +13,6 @@ jobs:
     strategy:
       matrix:
         ros_distro: ["humble"]
-        target:
-          # - base
-          - turtlebot3
-        include:
-          # - ros_distro: "humble"
-          #   target: "base"
-          - ros_distro: "humble"
-            target: "turtlebot3"
 
     steps:
       - name: Checkout
@@ -42,21 +34,15 @@ jobs:
       - name: Set image name with timestamp
         id: image_meta
         run: |
-          if [ "${{ matrix.target }}" = "base" ]; then
-            echo "image_tag=${{ matrix.ros_distro }}" >> $GITHUB_OUTPUT
-          else
-            echo "image_tag=${{ matrix.ros_distro }}-${{ matrix.target }}" >> $GITHUB_OUTPUT
-          fi
+          echo "image_tag=${{ matrix.ros_distro }}-turtlebot3" >> $GITHUB_OUTPUT
           echo "commit_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Build and Push
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./Dockerfile
           #platforms: linux/amd64,linux/arm64
           platforms: linux/amd64
-          target: ${{ matrix.target }}
           push: true
           tags: |
             ${{ vars.DOCKER_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ steps.image_meta.outputs.image_tag }}

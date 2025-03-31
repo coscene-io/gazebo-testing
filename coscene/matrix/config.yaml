@@ -1,0 +1,48 @@
+# 示例文件
+
+# 版本号，当前支持的版本为"1"
+version: '1'
+
+# 测试名称为 workflow name
+name: 'build and trigger'
+
+# 一个 job 由一个或多个测试套件组成，这些测试套件可以并行测试
+jobs:
+  # 第一个测试套件的名称为"test-1"
+  - name: 'nav_test'
+    # 测试类型为"generic"
+    type: 'generic'
+
+    # 镜像地址
+    images:
+      # 根据测试类型，输入镜像地址
+      base: ghcr.io/coscene-io/ros:humble-turtlebot3
+
+    # 关联记录
+    records:
+      # 该测试套件的关联记录标签为"sample"
+      labels:
+        - 'sample'
+
+    # 该测试套件的运行命令
+    parameters:
+      script:
+        - /bin/sh
+        - -c
+        - 'mkdir -p /action/packages \
+            tar xzvf /cos/bundles/install.tar.gz -C /action/packages \
+            source /action/packages/setup.bash \
+            ros2 launch nav_test test_nav.launch.py'
+
+    # 测试套件"nav_test"的消息通知模板
+    notifications:
+      # 通知到钉钉群
+      - dingTalkBot:
+
+# 控制何时自动触发该测试
+on:
+  # 当上传测试程序时，满足以下条件则会触发
+  bundlePush:
+    # 条件：测试程序种类为"test"
+    category:
+      - nav_test

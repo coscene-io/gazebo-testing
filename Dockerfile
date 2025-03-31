@@ -3,6 +3,8 @@ ARG BASE_IMAGE=osrf/ros:humble-desktop-full
 
 FROM ${BASE_IMAGE} as base
 
+LABEL org.opencontainers.image.source https://github.com/coscene-io/gazebo-testing
+
 # Re-declare ROS_DISTRO after FROM to make it available
 ENV ROS_DISTRO=humble
 
@@ -22,18 +24,6 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
  && echo "export _colcon_cd_root=/opt/ros/${ROS_DISTRO}/" >> ~/.bashrc \
  && echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc
 
-COPY ./entrypoint.sh /
-ENTRYPOINT [ "/entrypoint.sh" ]
-
-WORKDIR /action/ros2_ws
-
-########################################################
-
-FROM base as turtlebot3
-
-# Re-declare ROS_DISTRO after FROM to make it available
-ENV ROS_DISTRO=humble
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-navigation2 \
     ros-${ROS_DISTRO}-nav2* \
@@ -45,3 +35,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-cv-bridge \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
+
+COPY ./scripts /scripts
+ENTRYPOINT [ "/scripts/entrypoint.sh" ]
+
+CMD [ "/scripts/run.sh" ]
+
+WORKDIR /action/ros2_ws

@@ -54,11 +54,11 @@ This repository provides a TurtleBot3 robot simulation environment and navigatio
 4. **Test Case extracted** ✅ Completed  
    ```bash
    # Single directory mounting
-   docker run -v ./records/case1:/input ...
+   docker run -v ./coscene/records/case1:/cos/files ...
    ```
    Directory structure:
    ```
-   /input/
+   /cos/files
    ├── maps/
    ├── models/
    ├── worlds/
