@@ -13,6 +13,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional
 from datetime import datetime
+import subprocess
 import random
 import string
 import os
@@ -123,15 +124,24 @@ class RecorderNode(Node):
 
     def start_recording(self):
         try:
+            self.output_dir = self._get_unique_base_dir()  
             storage_options = StorageOptions(
-                uri=str(self._get_unique_base_dir()),  # Convert PosixPath to string
+                uri=str(self.output_dir),
                 storage_id="mcap",
                 max_bagfile_size=self.config.max_split_size,
                 max_bagfile_duration=self.config.max_bag_duration,
             )
             self.get_logger().info(f"Recording to directory: {storage_options.uri}")
 
-            # Start recording with the new storage options
+            # write the mcap folder path to a file. This temporary file is used by the reindex script
+            try:
+                with open("/tmp/latest_bag_path.txt", "w") as f:
+                    f.write(str(self.output_dir))
+                self.get_logger().info(f"Saved latest bag path to /tmp/latest_bag_path.txt")
+            except Exception as e:
+                self.get_logger().warn(f"Failed to write latest bag path file: {e}")
+            
+
             self.recorder.record(
                 storage_options,
                 self.config.record_options,
@@ -152,6 +162,7 @@ class RecorderNode(Node):
         try:
             self.recorder.stop()
             self.get_logger().info("Recording stopped successfully")
+            self.fix_bag_file()
         except Exception as e:
             self.get_logger().error(f"Error stopping recording: {e}")
 
@@ -162,6 +173,18 @@ class RecorderNode(Node):
         self.ensure_stop_recording()
         # Then shutdown ROS
         rclpy.shutdown()
+    
+    def fix_bag_file(self):
+        if hasattr(self, "output_dir") and self.output_dir.exists():
+            try:
+                self.get_logger().info(f"Attempting to fix bag file in: {self.output_dir}")
+                subprocess.run(
+                    ['ros2', 'bag', 'fix', str(self.output_dir)],
+                    check=True
+                )
+                self.get_logger().info("Bag file repaired successfully.")
+            except subprocess.CalledProcessError as e:
+                self.get_logger().error(f"Failed to fix bag file: {e}")
 
 
 def main(args=None):

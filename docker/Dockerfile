@@ -6,6 +6,9 @@ FROM ${BASE_IMAGE} as base
 # Re-declare ROS_DISTRO after FROM to make it available
 ENV ROS_DISTRO=humble
 
+# Install tini for fix the mcap issue 
+RUN apt-get update && apt-get install -y tini
+
 # Add ROS2 repository and install base software
 RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -24,7 +27,11 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
  && echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc
 
 COPY ./docker/ros_entrypoint.sh /
-ENTRYPOINT [ "/ros_entrypoint.sh" ]
+
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]
 
 WORKDIR /action/ros2_ws
 
