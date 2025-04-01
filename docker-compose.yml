@@ -6,26 +6,17 @@ services:
       dockerfile: docker/Dockerfile
       target: turtlebot3
     ports:
-      - "21274:21274"  #  Bridge 
-      - "8000:8000"    #  HTTP serve for the costudio gett the gazebo display file
+      - "21274:21274"
+      - "8000:8000"
     environment:
       - ROS_DISTRO=humble
       - TURTLEBOT3_MODEL=waffle_pi
-    command: >
-      bash -c '
-        source /opt/ros/$${ROS_DISTRO}/setup.bash &&
-        colcon build &&
-        source /action/ros2_ws/install/setup.bash &&
-        python3 -m http.server 8000 --directory /input/models/RMUL2024_world/meshes &&
-        ros2 launch nav_test test_nav.launch.py &&
-        ros2 launch stl_visualizer visualize.launch.py
-      '
     volumes:
       - ros2_ws:/action/ros2_ws
       - .:/action/ros2_ws/src
       - ./records/case1:/input
       - ./output:/output
-
+    stop_grace_period: 20s
 volumes:
   ros2_ws:
     driver: local
