@@ -350,6 +350,11 @@ class NavController(Node):
                 json.dump(report, f, indent=2, ensure_ascii=False)
             self.get_logger().info(f"Test report generated: {report_path}")
             self.get_logger().info("All tasks completed, preparing to exit")
+
+            done_flag_path = "/tmp/nav_done.flag"
+            with open(done_flag_path, "w") as f:
+                f.write("done\n")
+            self.get_logger().info(f"Wrote completion flag: {done_flag_path}")
             rclpy.try_shutdown()
 
         except PermissionError:
