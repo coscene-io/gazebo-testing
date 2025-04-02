@@ -4,7 +4,6 @@ import rclpy
 from rclpy.node import Node
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
-from rosbag2_py import RecordOptions, StorageOptions, Recorder
 import yaml
 import signal
 import sys
@@ -16,6 +15,8 @@ from datetime import datetime
 import subprocess
 import random
 import string
+import threading
+import time
 import os
 
 
@@ -24,35 +25,26 @@ class RecorderConfig:
     record_dir: Path
     max_split_size: int
     max_bag_duration: int
-    record_options: Optional[RecordOptions] = None
+    max_cache_size: int
+    topics: List[str]
+    use_sim_time: bool
 
     @classmethod
     def from_dict(cls, config_dict: dict) -> "RecorderConfig":
-        """Create a RecorderConfig from a dictionary"""
         record_dir = Path(config_dict.get("record_dir", "~/rosbag2")).expanduser()
-
-        max_split_size = int(config_dict.get("max_split_size", "10071520"))
-        max_bag_duration = int(config_dict.get("max_bag_duration", "0"))
+        max_split_size = int(config_dict.get("max_split_size", 0))
+        max_bag_duration = int(config_dict.get("max_bag_duration", 0))
+        max_cache_size = int(config_dict.get("max_cache_size", 0))
         topics = config_dict.get("topics", [])
-        compression_format = config_dict.get("compression_format", None)
         use_sim_time = bool(config_dict.get("use_sim_time", False))
-
-        # Create record options
-        record_options = RecordOptions()
-        record_options.all = len(topics) == 0
-        record_options.topics = topics
-        record_options.use_sim_time = use_sim_time
-
-        # Set compression options based on storage format
-        if compression_format is not None:
-            record_options.compression_format = compression_format
-            record_options.compression_mode = "file"  # Use file/chunk compression
 
         return cls(
             record_dir=record_dir,
             max_split_size=max_split_size,
             max_bag_duration=max_bag_duration,
-            record_options=record_options,
+            max_cache_size=max_cache_size,
+            topics=topics,
+            use_sim_time=use_sim_time,
         )
 
 
@@ -60,37 +52,31 @@ class RecorderNode(Node):
     def __init__(self):
         super().__init__("recorder_node")
 
-        # Flag to track if recording has been stopped
         self._recording_stopped = False
-
-        # Callback group for periodic checks
+        self._recording_process = None
         self.callback_group = MutuallyExclusiveCallbackGroup()
 
-        # Declare parameters
-        self.declare_parameter("config_file", "config/recorder_config.yaml")
-        config_file = self.get_parameter("config_file").value
+        self.declare_parameter("config_file", "")
+        config_file = self.get_parameter("config_file").get_parameter_value().string_value
+
+        if not os.path.exists(config_file):
+            raise FileNotFoundError(f"Config file not found: {config_file}")
 
         try:
-            # Load configuration
             self.config = self.load_config(config_file)
             self.get_logger().info(f"Loaded config from {config_file}")
 
-            # Initialize recorder
-            self.recorder = Recorder()
-
-            # Register signal handlers
             signal.signal(signal.SIGINT, self.signal_handler)
             signal.signal(signal.SIGTERM, self.signal_handler)
-
-            # Register cleanup function for Python exit
             atexit.register(self.ensure_stop_recording)
 
-            # Start recording
-            self.start_recording()
+            self.start_recording_async()
 
-            # Add a timer to check ROS status
+            self.flag_monitor_thread = threading.Thread(target=self.watch_nav_done_flag, daemon=True)
+            self.flag_monitor_thread.start()
+
             self.check_timer = self.create_timer(
-                1.0,  # Check every second
+                1.0,
                 self.check_ros_status,
                 callback_group=self.callback_group,
             )
@@ -100,13 +86,11 @@ class RecorderNode(Node):
             raise
 
     def check_ros_status(self):
-        """Check ROS status and stop recording if ROS is shutting down"""
         if not rclpy.ok():
             self.get_logger().info("ROS context is shutting down, stopping recording")
             self.ensure_stop_recording()
 
     def load_config(self, config_path: str):
-        """Load configuration from YAML file"""
         try:
             with open(config_path, "r") as f:
                 config_dict = yaml.safe_load(f)
@@ -117,42 +101,46 @@ class RecorderNode(Node):
 
     def _get_unique_base_dir(self):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-        random_suffix = "".join(
-            random.choices(string.ascii_lowercase + string.digits, k=5)
-        )
+        random_suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
         return self.config.record_dir / f"{timestamp}_{random_suffix}"
 
-    def start_recording(self):
-        try:
-            self.output_dir = self._get_unique_base_dir()  
-            storage_options = StorageOptions(
-                uri=str(self.output_dir),
-                storage_id="mcap",
-                max_bagfile_size=self.config.max_split_size,
-                max_bagfile_duration=self.config.max_bag_duration,
-            )
-            self.get_logger().info(f"Recording to directory: {storage_options.uri}")
-
-            # write the mcap folder path to a file. This temporary file is used by the reindex script
+    def start_recording_async(self):
+        def _record():
             try:
+                self.output_dir = self._get_unique_base_dir()
+                
+                cmd = [
+                    "ros2", "bag", "record",
+                    "--output", str(self.output_dir),
+                    "--storage", "mcap",
+                    "--max-bag-size", str(self.config.max_split_size),
+                    "--max-cache-size", str(self.config.max_cache_size),
+                    "--max-bag-duration", str(self.config.max_bag_duration),
+                ]
+
+                if self.config.use_sim_time:
+                    cmd.append("--include-hidden-topics")
+
+                if self.config.topics:
+                    cmd.extend(self.config.topics)
+                else:
+                    cmd.append("--all")
+
                 with open("/tmp/latest_bag_path.txt", "w") as f:
                     f.write(str(self.output_dir))
-                self.get_logger().info(f"Saved latest bag path to /tmp/latest_bag_path.txt")
-            except Exception as e:
-                self.get_logger().warn(f"Failed to write latest bag path file: {e}")
-            
+                self.get_logger().info(f"Recording to directory: {self.output_dir}")
+                self.get_logger().info(f"Running command: {' '.join(cmd)}")
 
-            self.recorder.record(
-                storage_options,
-                self.config.record_options,
-            )
-            self.get_logger().info(f"Recording started with config: {self.config}")
-        except Exception as e:
-            self.get_logger().error(f"Critical recording failure: {e}")
-            sys.exit(1)
+                self._recording_process = subprocess.Popen(cmd)
+                self._recording_process.wait()
+                self.get_logger().info("Recording subprocess ended.")
+            except Exception as e:
+                self.get_logger().error(f"Recording thread failed: {e}")
+
+        self.record_thread = threading.Thread(target=_record, daemon=True)
+        self.record_thread.start()
 
     def ensure_stop_recording(self):
-        """Ensure stop_recording is only called once"""
         if not self._recording_stopped:
             self.stop_recording()
             self._recording_stopped = True
@@ -160,40 +148,54 @@ class RecorderNode(Node):
     def stop_recording(self):
         self.get_logger().info("Stopping recording...")
         try:
-            self.recorder.stop()
-            self.get_logger().info("Recording stopped successfully")
-            self.fix_bag_file()
+            if self._recording_process and self._recording_process.poll() is None:
+                self._recording_process.terminate()
+                self._recording_process.wait()
+                self.get_logger().info("Recording process terminated.")
+            else:
+                self.get_logger().info("Recording process already exited.")
+            self.reindex_bag_file()
         except Exception as e:
             self.get_logger().error(f"Error stopping recording: {e}")
 
     def signal_handler(self, sig, frame):
-        """Handle signals for graceful shutdown"""
         self.get_logger().info(f"Received signal {sig}, gracefully shutting down...")
-        # First stop recording
         self.ensure_stop_recording()
-        # Then shutdown ROS
         rclpy.shutdown()
-    
-    def fix_bag_file(self):
+
+    def reindex_bag_file(self):
         if hasattr(self, "output_dir") and self.output_dir.exists():
             try:
-                self.get_logger().info(f"Attempting to fix bag file in: {self.output_dir}")
+                self.get_logger().info(f"Attempting to reindex bag file in: {self.output_dir}")
                 subprocess.run(
-                    ['ros2', 'bag', 'fix', str(self.output_dir)],
+                    ['ros2', 'bag', 'reindex', str(self.output_dir)],
                     check=True
                 )
-                self.get_logger().info("Bag file repaired successfully.")
+                self.get_logger().info("Bag file reindexed successfully.")
             except subprocess.CalledProcessError as e:
-                self.get_logger().error(f"Failed to fix bag file: {e}")
+                self.get_logger().error(f"Failed to reindex bag file: {e}")
+
+    def watch_nav_done_flag(self):
+        flag_path = "/tmp/nav_done.flag"
+        self.get_logger().info("Starting to monitor nav_done flag...")
+
+        while not self._recording_stopped:
+            if os.path.exists(flag_path):
+                self.get_logger().info("Detected nav_done.flag, stopping recording...")
+                self.ensure_stop_recording()
+                try:
+                    os.remove(flag_path)
+                    self.get_logger().info("nav_done.flag removed after processing.")
+                except Exception as e:
+                    self.get_logger().warn(f"Failed to remove nav_done.flag: {e}")
+                break
+            time.sleep(0.5)
 
 
 def main(args=None):
-    rclpy.init(args=args)  # This handles ROS2-specific command line arguments
-
+    rclpy.init(args=args)
     try:
         node = RecorderNode()
-
-        # Use single-threaded executor
         executor = SingleThreadedExecutor()
         executor.add_node(node)
 
@@ -202,15 +204,12 @@ def main(args=None):
         except KeyboardInterrupt:
             pass
         finally:
-            # Ensure cleanup before shutdown
             node.ensure_stop_recording()
             executor.shutdown()
             node.destroy_node()
-
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
     finally:
-        # Final cleanup
         rclpy.shutdown()
 
 
