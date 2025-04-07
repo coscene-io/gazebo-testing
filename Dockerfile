@@ -20,7 +20,6 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
  && echo "deb [signed-by=$GPG_PATH] $SOURCE_URL $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/coscene.list \
  && apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-cobridge \
-    python3-stl \
  && echo "source /usr/share/colcon_cd/function/colcon_cd.sh" >> ~/.bashrc \
  && echo "export _colcon_cd_root=/opt/ros/${ROS_DISTRO}/" >> ~/.bashrc \
  && echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc

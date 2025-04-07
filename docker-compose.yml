@@ -1,8 +1,8 @@
 services:
   nav_test:
     image: ghcr.io/coscene-io/ros:humble-turtlebot3
-    # build:
-    #   context: .
+    build:
+      context: .
     ports:
       - "21274:21274" #  Bridge 
       - "8000:8000" #  HTTP serve for the costudio gett the gazebo display file
