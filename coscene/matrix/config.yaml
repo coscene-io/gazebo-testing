@@ -27,12 +27,7 @@ jobs:
     # 该测试套件的运行命令
     parameters:
       script:
-        - /bin/sh
-        - -c
-        - 'mkdir -p /action/packages \
-            tar xzvf /cos/bundles/install.tar.gz -C /action/packages \
-            source /action/packages/setup.bash \
-            ros2 launch nav_test test_nav.launch.py'
+        - /scripts/run.sh
 
     # 测试套件"nav_test"的消息通知模板
     notifications:

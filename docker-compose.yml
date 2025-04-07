@@ -4,7 +4,8 @@ services:
     build:
       context: .
     ports:
-      - 21274:21274
+      - "21274:21274" #  Bridge 
+      - "8000:8000" #  HTTP serve for the costudio gett the gazebo display file
     environment:
       - ROS_DISTRO=humble
       - TURTLEBOT3_MODEL=waffle_pi

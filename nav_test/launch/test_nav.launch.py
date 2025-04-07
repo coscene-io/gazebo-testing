@@ -59,31 +59,33 @@ def generate_launch_description():
     pkg_turtlebot3_gazebo = get_package_share_directory("turtlebot3_gazebo")
     data_root = LaunchConfiguration("data_root")
 
+    ##################################################################
+    # region default values
+    ##################################################################
+
     # data_root:=$DATA_ROOT
     default_data_root = "/cos/files"
 
     # turtlebot3_model:=waffle_pi
     default_turtlebot3_model = "waffle_pi"
 
-    # test_points:=$DATA_ROOT/config/test_points.yaml
-    default_test_points_path = path_join(data_root, "config", "test_points.yaml")
-
-    # report_path:=/cos/artifacts/reports
-    default_report_path = "/cos/artifacts/reports"
-
     # world:=$DATA_ROOT/worlds/RMUL2024_world_dynamic_obstacles.world
     default_world = path_join(
         data_root, "worlds", "RMUL2024_world_dynamic_obstacles.world"
     )
 
+    # --params-file $DATA_ROOT/param/case.yaml
+    default_params = path_join(data_root, "param", "case.yaml")
+
     # map:=$DATA_ROOT/maps/map.yaml
     default_map = path_join(data_root, "maps", "map.yaml")
 
-    # nav2_param:=$PKG_DIR/param/nav2_params.yaml
-    default_nav2_param_file = path_join(pkg_dir, "param", "waffle_pi.yaml")
+    # nav2_param:=$PKG_DIR/param/waffle_pi.yaml
+    default_nav2_params = path_join(pkg_dir, "param", "waffle_pi.yaml")
+    # endregion
 
     ##################################################################
-    # launch arguments | environment variables | launch files | nodes
+    # region launch arguments
     ##################################################################
 
     data_root_arg = DeclareLaunchArgument(
@@ -106,21 +108,26 @@ def generate_launch_description():
         default_value=default_map,
         description="Full path to map file to load",
     )
-    test_points_arg = DeclareLaunchArgument(
-        "test_points",
-        default_value=default_test_points_path,
-        description="Full path to config file to load",
+    mesh_server_url_arg = DeclareLaunchArgument(
+        "mesh_server_url",
+        default_value="",
+        description="Full path to mesh server url",
     )
-    report_path_arg = DeclareLaunchArgument(
-        "report_path",
-        default_value=default_report_path,
-        description="Full path to report directory",
+    main_params_arg = DeclareLaunchArgument(
+        "main_params",
+        default_value=default_params,
+        description="Full path to params file to load",
     )
-    nav2_param_file_arg = DeclareLaunchArgument(
-        "nav2_param_file",
-        default_value=default_nav2_param_file,
-        description="Full path to param file to load",
+    nav2_params_arg = DeclareLaunchArgument(
+        "nav2_params",
+        default_value=default_nav2_params,
+        description="Full path to params file to load",
     )
+    # endregion
+    
+    ##################################################################
+    # region environment variables
+    ##################################################################
 
     # export GAZEBO_MODEL_PATH=$DATA_ROOT/models:$GAZEBO_MODEL_PATH
     gazebo_model_path_env = set_path_env(
@@ -142,6 +149,17 @@ def generate_launch_description():
         ],
     )
 
+    # export TURTLEBOT3_MODEL=$TURTLEBOT3_MODEL
+    turtlebot3_model_env = SetEnvironmentVariable(
+        "TURTLEBOT3_MODEL",
+        LaunchConfiguration("turtlebot3_model"),
+    )
+    # endregion
+
+    ##################################################################
+    # region launch files
+    ##################################################################
+    
     # ros2 launch coscene_recorder record.launch.py
     record_launch = include_pkg_launch("coscene_recorder", "record.launch.py")
     # ros2 launch cobridge cobridge_launch.xml
@@ -162,9 +180,28 @@ def generate_launch_description():
         "navigation2.launch.py",
         launch_arguments={
             "map": LaunchConfiguration("map"),
-            "params_file": LaunchConfiguration("nav2_param_file"),
+            "params_file": LaunchConfiguration("nav2_params"),
             "use_sim_time": "true",
         }.items(),
+    )
+    # endregion
+
+    ##################################################################
+    # region nodes
+    ##################################################################
+
+    # marker_publisher
+    marker_publisher_node = Node(
+        package="marker_publisher",
+        executable="marker_publisher",
+        name="marker_publisher",
+        output="screen",
+        parameters=[
+            LaunchConfiguration("main_params"),
+            {
+                "mesh_server_url": LaunchConfiguration("mesh_server_url"),
+            },
+        ],
     )
 
     # ros2 run nav_test nav_controller
@@ -174,8 +211,7 @@ def generate_launch_description():
         name="nav_controller",
         output="screen",
         parameters=[
-            {"config_path": LaunchConfiguration("test_points")},
-            {"report_path": LaunchConfiguration("report_path")},
+            LaunchConfiguration("main_params"),
         ],
     )
 
@@ -186,6 +222,7 @@ def generate_launch_description():
         name="node_lister",
         output="screen",
     )
+    # endregion
 
     return LaunchDescription(
         [
@@ -194,9 +231,9 @@ def generate_launch_description():
             turtlebot3_model_arg,
             world_arg,
             map_arg,
-            nav2_param_file_arg,
-            test_points_arg,
-            report_path_arg,
+            nav2_params_arg,
+            main_params_arg,
+            mesh_server_url_arg,
             # environment variables
             gazebo_model_path_env,
             gazebo_resource_path_env,
@@ -208,5 +245,6 @@ def generate_launch_description():
             # nodes
             node_lister_node,
             nav_controller_node,
+            marker_publisher_node,
         ]
     )

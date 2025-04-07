@@ -24,12 +24,15 @@ This repository provides a TurtleBot3 robot simulation environment and navigatio
 
 ### High Priority
 1. **Topic Enhancement** 🔄 Developing  
-   - [ ] Add support for `/plan` visualization topics
-   - [ ] Implement 3D map topics (OctoMap/PointCloud2)
+   - [x] Add support for `/plan` visualization topics
+   ```
+      use /received_global_plan instead. /plan doesn't contain frame.id in every pose. 
+   ```
+   - [x] Implement 3D map topics (OctoMap/PointCloud2)
    - [ ] Integrate camera topics (`/camera/rgb/image_raw`)
 
 2. **System Lifecycle** ⚙️ Planned  
-   - [ ] Graceful shutdown procedure for nav_test
+   - [x] Graceful shutdown procedure for nav_test
    ```python
    # Proposed shutdown sequence
    def shutdown_handler(signum, frame):
@@ -41,8 +44,11 @@ This repository provides a TurtleBot3 robot simulation environment and navigatio
 
 3. **Test Reporting** 📊 In Progress  
    - [x] JSON report generation (current)
-   - [ ] JUnit XML report format from pytest
-   - [ ] Key moment markers in reports
+   - [x] JUnit XML report format from pytest
+   - [x] Key moment markers in reports
+         '''
+         if single task_case failed, it will publish error_code.
+         '''
    ```xml
    <!-- JUnit example -->
    <testcase name="NavigationToPoint2" status="FAILED">

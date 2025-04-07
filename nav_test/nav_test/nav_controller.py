@@ -2,7 +2,6 @@
 import json
 import os
 import random
-import sys
 import time
 from datetime import datetime
 from uuid import uuid4
@@ -14,7 +13,7 @@ from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from nav2_msgs.action import NavigateToPose
 from rclpy.action import ActionClient
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import String
 
 from nav_test.ros_utils import load_pose
@@ -72,7 +71,7 @@ class TaskManager:
 
 class NavController(Node):
     def __init__(self):
-        super().__init__("advanced_nav_controller")
+        super().__init__("nav_controller")
 
         self.declare_parameter("config_path", "")
         self.declare_parameter("report_path", "/home/qingyu")
@@ -80,6 +79,7 @@ class NavController(Node):
         try:
             # Get configuration file path
             self.config_path = self.get_parameter("config_path").value
+            print("The config path is: " + self.config_path)
             if not os.path.exists(self.config_path):
                 raise FileNotFoundError(
                     f"Configuration file not found: {self.config_path}"
@@ -309,53 +309,80 @@ class NavController(Node):
 
     def generate_report(self):
         try:
-            report_path = os.path.join(
-                self.get_parameter("report_path").value,
-                f"nav_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            report_dir = self.get_parameter("report_path").value
+            report_filename = f"nav_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xml"
+            report_path = os.path.join(report_dir, report_filename)
+    
+            os.makedirs(report_dir, exist_ok=True)
+    
+            import xml.etree.ElementTree as ET
+            from xml.dom import minidom
+
+        
+            for task in self.task_mgr.history:
+                if not isinstance(task.get("start_time"), datetime):
+                    self.get_logger().error(f"Invalid start_time in task {task['id']}")
+                    task["start_time"] = datetime.now()
+                if not isinstance(task.get("end_time"), datetime):
+                    self.get_logger().error(f"Invalid end_time in task {task['id']}")
+                    task["end_time"] = datetime.now()
+
+            total_tasks = len(self.task_mgr.history)
+            failures = sum(1 for t in self.task_mgr.history if t["status"] == "failed")
+            total_time = sum(
+                (task["end_time"] - task["start_time"]).total_seconds()
+                for task in self.task_mgr.history
             )
 
-            # Ensure directory exists
-            report_dir = os.path.dirname(report_path)
-            os.makedirs(report_dir, exist_ok=True)
+            testsuites = ET.Element("testsuites", {
+                "id": f"NAV-REPORT-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                "name": "Navigation Test Suite",
+                "tests": str(total_tasks),
+                "failures": str(failures),
+                "time": f"{total_time:.3f}"
+            })
+    
+            testsuite = ET.SubElement(testsuites, "testsuite", {
+                "id": "navigation_tasks",
+                "name": "Navigation Tasks",
+                "tests": str(total_tasks),
+                "failures": str(failures),
+                "time": f"{total_time:.3f}"
+            })
+    
+            for task in self.task_mgr.history:
+                duration = (task["end_time"] - task["start_time"]).total_seconds()
+                case_attrs = {
+                    "id": task["id"],
+                    "name": f"Navigation to ({task['point']['x']}, {task['point']['y']})",
+                    "time": f"{duration:.3f}"
+                }
+                testcase = ET.SubElement(testsuite, "testcase", case_attrs)
+        
+                if task["status"] == "failed":
+                    failure = ET.SubElement(testcase, "failure", {
+                        "message": task["error_info"],
+                        "type": "NavigationError"
+                    })
+                    failure.text = f"{task['error_info']}\n" \
+                                f"Target Coordinates: ({task['point']['x']}, {task['point']['y']})\n" \
+                                f"Duration: {duration:.2f}s"
 
-            report = {
-                "metadata": {
-                    "report_id": f"NAV-REPORT-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                    "generation_time": datetime.now().isoformat(),
-                    "total_tasks": len(self.task_mgr.history),
-                    "success_count": self.task_success,
-                    "failure_count": self.task_fail,
-                },
-                "tasks": [
-                    {
-                        "task_id": t["id"],
-                        "coordinates": {
-                            "x": t["point"]["x"],
-                            "y": t["point"]["y"],
-                            "orientation": t["point"].get("w", 1.0),
-                        },
-                        "status": t["status"],
-                        "duration_sec": (
-                            (t["end_time"] - t["start_time"]).total_seconds()
-                            if t["end_time"]
-                            else 0
-                        ),
-                        "error_info": t["error_info"],
-                    }
-                    for t in self.task_mgr.history
-                ],
-            }
-
-            with open(report_path, "w", encoding="utf-8") as f:
-                json.dump(report, f, indent=2, ensure_ascii=False)
-            self.get_logger().info(f"Test report generated: {report_path}")
-            self.get_logger().info("All tasks completed, preparing to exit")
+            xml_str = ET.tostring(testsuites, encoding="utf-8")
+            dom = minidom.parseString(xml_str)
+            pretty_xml = dom.toprettyxml(indent="  ", encoding="utf-8")
+    
+            with open(report_path, "wb") as f:
+                f.write(pretty_xml)
+        
+            self.get_logger().info(f"JUnit report generated: {report_path}")
             rclpy.try_shutdown()
-
-        except PermissionError:
-            self.get_logger().error(f"No permission to write file: {report_path}")
+    
         except Exception as e:
             self.get_logger().error(f"Report generation failed: {str(e)}")
+            raise  
+
+
 
 
 def main(args=None):
