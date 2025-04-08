@@ -16,7 +16,7 @@ jobs:
     # 镜像地址
     images:
       # 根据测试类型，输入镜像地址
-      base: ghcr.io/coscene-io/ros:humble-turtlebot3
+      base: cr.coscene.cn/codemo/ros:humble-turtlebot3
 
     # 关联记录
     records:

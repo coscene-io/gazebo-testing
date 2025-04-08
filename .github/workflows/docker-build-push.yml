@@ -9,6 +9,7 @@ on:
 
 jobs:
   build-and-push:
+    environment: saas_codemo
     runs-on: ubuntu-latest
     strategy:
       matrix:
