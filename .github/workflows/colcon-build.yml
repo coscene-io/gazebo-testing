@@ -31,13 +31,11 @@ jobs:
           platform:
             endpoint: ${{ vars.COSCENE_ENDPOINT }}
             project: "batch-test"
-            accessToken: OWZkN2I5MTczNGJmN2JkNzFkMWE0ZGFmNjMxOGU4MWUxMjFmZDUzOGZhOTc5NDIzZDhlNGU0YTExMzRiMzgxNw==
+            accessToken: ${{ secrets.COSCENE_ACCESS_TOKEN }}
           EOF
 
       - name: Push and Trigger Test
         run: |
-          cat $HOME/.cos/config.yaml
-
           ls -l install.tar.gz coscene/matrix/config.yaml ./install
           /bin/cos test run \
             --config $HOME/.cos/config.yaml \
