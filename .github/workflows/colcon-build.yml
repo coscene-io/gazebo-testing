@@ -37,8 +37,7 @@ jobs:
       - name: Push and Trigger Test
         run: |
           ls -l install.tar.gz coscene/matrix/config.yaml ./install
-          echo "
           /bin/cos test run \
             --test-config coscene/matrix/config.yaml \
             -b install.tar.gz
-          "
+
