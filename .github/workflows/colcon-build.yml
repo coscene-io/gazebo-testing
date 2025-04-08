@@ -30,7 +30,7 @@ jobs:
           cat > $HOME/.cos/config.yaml << EOF
           platform:
             endpoint: ${{ vars.COSCENE_ENDPOINT }}
-            project: "batch-test"
+            project: "navtest"
             accessToken: ${{ secrets.COSCENE_ACCESS_TOKEN }}
           EOF
 
