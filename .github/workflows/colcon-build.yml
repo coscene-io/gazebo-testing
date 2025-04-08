@@ -30,8 +30,8 @@ jobs:
           cat > $HOME/.cos/config.yaml << EOF
           platform:
             endpoint: ${{ vars.COSCENE_ENDPOINT }}
-            project: ${{ vars.COSCENE_PROJECT }}
-            access_token: OWZkN2I5MTczNGJmN2JkNzFkMWE0ZGFmNjMxOGU4MWUxMjFmZDUzOGZhOTc5NDIzZDhlNGU0YTExMzRiMzgxNw==
+            project: batch-test
+            accessToken: OWZkN2I5MTczNGJmN2JkNzFkMWE0ZGFmNjMxOGU4MWUxMjFmZDUzOGZhOTc5NDIzZDhlNGU0YTExMzRiMzgxNw==
           EOF
 
       - name: Push and Trigger Test
