@@ -22,7 +22,7 @@ jobs:
     records:
       # 该测试套件的关联记录标签为"sample"
       labels:
-        - '影子模式'
+        - 'sample'
 
     # 该测试套件的运行命令
     parameters:
