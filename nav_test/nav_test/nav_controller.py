@@ -3,6 +3,7 @@ import json
 import os
 import random
 import time
+import subprocess
 from datetime import datetime
 from uuid import uuid4
 
@@ -17,6 +18,8 @@ from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import String
 
 from nav_test.ros_utils import load_pose
+
+
 
 
 class TaskManager:
@@ -108,6 +111,9 @@ class NavController(Node):
         self.current_task = None
 
         # Schedule startup sequence with a short delay to allow node initialization to complete
+        self.get_logger().info("Waiting for other nodes ready...")
+        time.sleep(45)
+        self.get_logger().info("Waiting finished, Start test!")
         self.startup_timer = self.create_timer(0.5, self.initialize_sequence)
 
     def initialize_sequence(self):
@@ -383,8 +389,6 @@ class NavController(Node):
             raise  
 
 
-
-
 def main(args=None):
     try:
         rclpy.init(args=args)
@@ -401,7 +405,14 @@ def main(args=None):
         # Check if ROS context is initialized before shutdown
         if rclpy.ok():
             rclpy.shutdown()
-
+        
+        try:
+            subprocess.run(
+                "ps -ef | grep 'ros2 launch nav_test test_nav.launch.py' | grep -v grep | awk '{print $2}' | xargs kill -9",
+                shell=True
+            )
+        except Exception as e:
+            print(f"Failed to kill launch process: {e}")
 
 if __name__ == "__main__":
     main()
