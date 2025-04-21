@@ -4,6 +4,11 @@ on:
   workflow_dispatch:
 
 jobs:
+  docker-build-push:
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      environment: saas_codemo
+
   colcon-build-and-test:
     runs-on: ubuntu-latest
     container:
@@ -30,8 +35,8 @@ jobs:
           cat > $HOME/.cos/config.yaml << EOF
           platform:
             endpoint: ${{ vars.COSCENE_ENDPOINT }}
-            project: "navtest"
-            accessToken: ${{ secrets.COSCENE_ACCESS_TOKEN }}
+            project: ${{ vars.COSCENE_PROJECT }}
+            token: ${{ secrets.COSCENE_ACCESS_TOKEN }}
           EOF
 
       - name: Push and Trigger Test
