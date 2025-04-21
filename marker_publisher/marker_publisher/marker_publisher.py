@@ -1,4 +1,5 @@
 import rclpy
+import os
 from geometry_msgs.msg import TransformStamped
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
@@ -15,7 +16,7 @@ class MarkerPublisher(Node):
         super().__init__("marker_publisher")
 
         self.declare_parameter("mesh_resource_dir", "")
-        self.declare_parameter("mesh_server_url", "http://localhost:8000")
+        self.declare_parameter("mesh_server_url", "")
         self.declare_parameter("mesh_server_port", 8000)
         self.declare_parameter(
             "marker", "",
@@ -40,7 +41,11 @@ class MarkerPublisher(Node):
             return
         try:
             data = yaml.safe_load(marker_value)
-            data["mesh_server_url"] = self.get_parameter("mesh_server_url").value or f"http://localhost:{self.mesh_server_port}"
+            mesh_server_url_env = os.environ.get("COS_HTTP_FORWARD_URL")
+            if mesh_server_url_env:
+                data["mesh_server_url"] = mesh_server_url_env
+            else:
+                data["mesh_server_url"] = self.get_parameter("mesh_server_url").value or f"http://localhost:{self.mesh_server_port}"
             self.desc = MarkerDescription.from_dict(data)
         except Exception as e:
             self.get_logger().error(f"Failed to load marker descriptions: {str(e)}")

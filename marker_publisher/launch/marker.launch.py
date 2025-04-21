@@ -3,7 +3,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, EnvironmentVariable
 from launch_ros.actions import Node
 
 
@@ -25,8 +25,8 @@ def generate_launch_description():
 
     mesh_server_url_arg = DeclareLaunchArgument(
         "mesh_server_url",
-        default_value="",
-        description="External mesh server URL (e.g., https://mesh.example.com). If empty, uses localhost with mesh_server_port",
+        default_value=EnvironmentVariable("COS_HTTP_FORWARD_URL", default_value=""),
+        description="Mesh server URL from COS_HTTP_FORWARD_URL env or override manually",
     )
 
     # marker_publisher
