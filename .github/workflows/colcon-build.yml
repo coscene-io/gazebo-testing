@@ -30,15 +30,15 @@ jobs:
           cat > $HOME/.cos/config.yaml << EOF
           platform:
             endpoint: ${{ vars.COSCENE_ENDPOINT }}
-            project: ${{ vars.COSCENE_PROJECT }}
-            token: ${{ secrets.COSCENE_ACCESS_TOKEN }}
+            project: "navtest"
+            accessToken: ${{ secrets.COSCENE_ACCESS_TOKEN }}
           EOF
 
       - name: Push and Trigger Test
         run: |
           ls -l install.tar.gz coscene/matrix/config.yaml ./install
-          echo "
           /bin/cos test run \
+            --config $HOME/.cos/config.yaml \
             --test-config coscene/matrix/config.yaml \
             -b install.tar.gz
-          "
+
