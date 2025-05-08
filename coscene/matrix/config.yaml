@@ -1,39 +1,65 @@
-# 示例文件
+#Here is a sample config.yaml file for the operator to run a test suite on coScene's platform.
+# Here is the documentation for the config.yaml file: https://docs.coscene.io/docs/sim-and-tests/regression/config-management
 
-# 版本号，当前支持的版本为"1"
+# Example file
+
+# Version number, currently supported version is "1"
 version: '1'
 
-# 测试名称为 workflow name
-name: 'build and trigger'
+# Test name is workflow name
+name: 'workflow name'
 
-# 一个 job 由一个或多个测试套件组成，这些测试套件可以并行测试
+# A job consists of one or more test suites that can be tested in parallel
 jobs:
-  # 第一个测试套件的名称为"test-1"
-  - name: 'nav_test'
-    # 测试类型为"generic"
-    type: 'generic'
+  # First test suite named "test-1"
+  - name: For Navigation2 Test
+    # Test type is "generic"
+    type: generic
 
-    # 镜像地址
+    # Image address
     images:
-      # 根据测试类型，输入镜像地址
-      base: ghcr.io/coscene-io/ros:humble-turtlebot3
+      # Enter image address according to test type
+      # make sure you have upload the image to the registry of coScene
+      base: /coscene-hello/position:v1.0.0 
 
-    # 关联记录
+    # Associated records
     records:
-      # 该测试套件的关联记录标签为"sample"
+      # This test suite's associated record label is "sample", which means every record with the same label will be associated with this test suite
       labels:
-        - 'sample'
+        - Navigation_Error
 
-    # 该测试套件的运行命令
+    # Run commands for this test suite 
     parameters:
       script:
         - /scripts/run.sh
+    
+    expose:
+      - name: websocket
+        port: 21274
+      - name: http
+        port: 8000
 
+    # Message notification template for test suite "test-1"
+    notifications:
+      # Notify to DingTalk group or other platforms. Please follow the instructions in the documentation to set up the webhook.
+      - dingTalkBot:
+          # DingTalk group webhook address
+          url: https://oapi.dingtalk.com/robot/send?access_token=xxxxxx
+          # Message template
+          template: |
+            {
+              "msgtype": "markdown",
+              "markdown": {
+                "title": "Test Report",
+                "text": "#### Test Report\n> Test suite name: test-1\n> Test result: {{result}}\n> Test duration: {{duration}} seconds\n> Test logs: [link]({{logUrl}})\n"
+              }
+            }
 
-# 控制何时自动触发该测试
+# Control when to automatically trigger this test
 on:
-  # 当上传测试程序时，满足以下条件则会触发
+  # Trigger when uploading test bundle that meets the following conditions
   bundlePush:
-    # 条件：测试程序种类为"test"
     category:
-      - nav_test
+      - Navigation
+      
+name: Nav_test_humble
