@@ -1,4 +1,4 @@
-# TurtleBot3 Robot Navigation Test  Repo
+# Cloud-Based Gazebo Simulation with CoScene
 
 ## 📖 Introduction  
 This repository provides a TurtleBot3 robot simulation environment and navigation stack based on:  
@@ -34,7 +34,7 @@ This repository provides a TurtleBot3 robot simulation environment and navigatio
 | Autonomous Navigation | Automatically navigate through 10 waypoints | Automatically navigate through 10 waypoints |
 | Waypoint Pool | Predefined 20 navigation points(can be edit before test) | Predefined 20 navigation points(can be edit before test) |
 | Test Reporting | Generate navigation test reports | Generate navigation test reports |
-| Visualization | Connect via CoBridge to view in real-time(auto) | Connect via CoBridge to view in real-time(manual select) |
+| Visualization | Connect via coBridge to view in real-time(auto) | Connect via coBridge to view in real-time(manual select) |
 | Gazebo Simulation | Full physics simulation with Gazebo 11(headless) | Full physics simulation with Gazebo 11(headless) |
 | YAML Configuration | Configure test parameters(test points and initial pose of robot) via YAML | Configure test parameters(test points and initial pose of robot) via YAML |
 | MCAP Recording | Record data as MCAP files (5Mins per file) | Record data as MCAP files (5Mins per file) |
@@ -70,13 +70,13 @@ docker compose up --build
 
 This will automatically build and run the whole repo.
 
-#### 4. Install CoStudio
+#### 4. Install coStudio
 
-Download and install CoStudio to your local PC. You can find the installation guide here:
+Download and install coStudio to your local PC. You can find the installation guide here:
 
-[CoStudio Download & Install](https://docs.coscene.cn/docs/client/connect-by-cobridge)
+[coStudio Download & Install](https://docs.coscene.cn/docs/client/connect-by-cobridge)
 
-#### 5. Open CoStudio and connect locally
+#### 5. Open coStudio and connect locally
 
 - Select **Local Connection**.
 - Import the layout file from `/coscene/layout` in this repo.
@@ -108,7 +108,7 @@ Docker image pushed to cr.coscene.cn
 Users pull and run the Docker image via docker-compose
         │
         ▼
-CoStudio connects (local or remote) for visualization
+coStudio connects (local or remote) for visualization
 ```
 
 ---
