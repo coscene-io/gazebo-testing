@@ -45,8 +45,8 @@ def set_path_env(name, paths):
     value = []
     for i, path in enumerate(paths):
         if i > 0:
-            value.append(":")  # 添加分隔符
-        value.append(path)  # 添加路径
+            value.append(":")  
+        value.append(path)  
     return SetEnvironmentVariable(name, value)
 
 

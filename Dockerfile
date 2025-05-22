@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean\
  && apt-get update && apt-get install -y --no-install-recommends \
     software-properties-common curl wget gnupg lsb-release \
- && SOURCE_URL=https://download.coscene.cn/coscene-apt-source \
+ && SOURCE_URL=https://apt.coscene.cn \
  && GPG_PATH=/etc/apt/trusted.gpg.d/coscene.gpg \
  && curl -fsSL "$SOURCE_URL/coscene.gpg" | gpg --dearmor -o $GPG_PATH \
  && echo "deb [signed-by=$GPG_PATH] $SOURCE_URL $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/coscene.list \

@@ -3,6 +3,8 @@ import json
 import os
 import random
 import time
+import subprocess
+import signal
 from datetime import datetime
 from uuid import uuid4
 
@@ -107,6 +109,15 @@ class NavController(Node):
         self.stop_navigation = False
         self.current_task = None
 
+        # Track if amcl_pose has been received after publishing initial pose
+        self.amcl_pose_received = False
+        self.create_subscription(
+            PoseWithCovarianceStamped,
+            "/amcl_pose",
+            self.amcl_pose_callback,
+            QoSProfile(depth=10)
+        )
+
         # Schedule startup sequence with a short delay to allow node initialization to complete
         self.startup_timer = self.create_timer(0.5, self.initialize_sequence)
 
@@ -137,9 +148,9 @@ class NavController(Node):
             initial_pose_msg.header.stamp = self.get_clock().now().to_msg()
 
             # Create publisher using AMCL's expected QoS settings
-            initial_pose_qos = QoSProfile(depth=1)
+            initial_pose_qos = QoSProfile(depth=10)
             initial_pose_qos.reliability = ReliabilityPolicy.RELIABLE
-            initial_pose_qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
+            initial_pose_qos.durability = DurabilityPolicy.VOLATILE
 
             pub = self.create_publisher(
                 PoseWithCovarianceStamped, "/initialpose", initial_pose_qos
@@ -165,18 +176,27 @@ class NavController(Node):
                 f"Found {sub_count} subscribers for /initialpose topic"
             )
 
-            # Publish the initial pose
-            pub.publish(initial_pose_msg)
-            self.get_logger().info("Initial pose published")
+            # Reset amcl_pose_received flag before publishing
+            self.amcl_pose_received = False
+
+            # Loop to publish initial pose until AMCL acknowledges
+            max_attempts = 20
+            interval = 0.5
+            attempts = 0
+            while not self.amcl_pose_received and attempts < max_attempts:
+                pub.publish(initial_pose_msg)
+                self.get_logger().info(f"Published initial pose, attempt {attempts + 1}")
+                time.sleep(interval)
+                attempts += 1
+
+            if not self.amcl_pose_received:
+                self.get_logger().warn("AMCL did not acknowledge initial pose within timeout.")
+            else:
+                self.get_logger().info("AMCL acknowledged initial pose.")
+
 
             # Clean up publisher
             self.destroy_publisher(pub)
-
-            # Wait for 3 seconds to ensure AMCL processes the initial pose
-            self.get_logger().info(
-                "Waiting 10 seconds for AMCL to process the initial pose..."
-            )
-            time.sleep(10.0)
 
             # Start navigation tasks
             self.get_logger().info("Starting navigation tasks...")
@@ -185,6 +205,10 @@ class NavController(Node):
         except Exception as e:
             self.get_logger().error(f"Failed to publish initial pose: {str(e)}")
             raise
+    
+    def amcl_pose_callback(self, msg):
+        self.amcl_pose_received = True
+
 
     def start_next_task(self):
         if self.stop_navigation:
@@ -312,13 +336,12 @@ class NavController(Node):
             report_dir = self.get_parameter("report_path").value
             report_filename = f"nav_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xml"
             report_path = os.path.join(report_dir, report_filename)
-    
+
             os.makedirs(report_dir, exist_ok=True)
-    
+
             import xml.etree.ElementTree as ET
             from xml.dom import minidom
 
-        
             for task in self.task_mgr.history:
                 if not isinstance(task.get("start_time"), datetime):
                     self.get_logger().error(f"Invalid start_time in task {task['id']}")
@@ -341,7 +364,7 @@ class NavController(Node):
                 "failures": str(failures),
                 "time": f"{total_time:.3f}"
             })
-    
+
             testsuite = ET.SubElement(testsuites, "testsuite", {
                 "id": "navigation_tasks",
                 "name": "Navigation Tasks",
@@ -349,7 +372,7 @@ class NavController(Node):
                 "failures": str(failures),
                 "time": f"{total_time:.3f}"
             })
-    
+
             for task in self.task_mgr.history:
                 duration = (task["end_time"] - task["start_time"]).total_seconds()
                 case_attrs = {
@@ -358,7 +381,7 @@ class NavController(Node):
                     "time": f"{duration:.3f}"
                 }
                 testcase = ET.SubElement(testsuite, "testcase", case_attrs)
-        
+
                 if task["status"] == "failed":
                     failure = ET.SubElement(testcase, "failure", {
                         "message": task["error_info"],
@@ -371,13 +394,21 @@ class NavController(Node):
             xml_str = ET.tostring(testsuites, encoding="utf-8")
             dom = minidom.parseString(xml_str)
             pretty_xml = dom.toprettyxml(indent="  ", encoding="utf-8")
-    
+
             with open(report_path, "wb") as f:
                 f.write(pretty_xml)
-        
+
             self.get_logger().info(f"JUnit report generated: {report_path}")
             rclpy.try_shutdown()
-    
+
+            # --- Add code to kill parent process (ros2 launch) ---
+            try:
+                ppid = os.getppid()
+                self.get_logger().info(f"Killing parent process {ppid} to shutdown launch system...")
+                os.kill(ppid, signal.SIGINT)
+            except Exception as e:
+                self.get_logger().error(f"Failed to kill parent process: {e}")
+
         except Exception as e:
             self.get_logger().error(f"Report generation failed: {str(e)}")
             raise  
@@ -401,6 +432,7 @@ def main(args=None):
         # Check if ROS context is initialized before shutdown
         if rclpy.ok():
             rclpy.shutdown()
+
 
 
 if __name__ == "__main__":

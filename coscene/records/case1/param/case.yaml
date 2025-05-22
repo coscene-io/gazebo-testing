@@ -5,7 +5,7 @@
 
 /marker_publisher:
   ros__parameters:
-    mesh_resource_dir: /cos/files/models/RMUL2024_world/meshes  # must be set
+    mesh_resource_dir: /cos/files/models/RMUL2024_world/meshes 
     marker: |
       mesh_resource: RMUL_2024.stl
       scale:

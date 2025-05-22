@@ -1,4 +1,4 @@
-# TurtleBot3 Robot Navigation Package (ROS2 Humble)
+# Cloud-Based Gazebo Simulation with CoScene
 
 ## 📖 Introduction  
 This repository provides a TurtleBot3 robot simulation environment and navigation stack based on:  
@@ -7,7 +7,9 @@ This repository provides a TurtleBot3 robot simulation environment and navigatio
 ✅ Gazebo 11  
 ✅ Navigation2  
 
-*Prerequisites*: All listed components must be installed before use.
+*Prerequisites*: 
+1. You must provide a base image which contains Ubuntu 22.04 (x86) & ROS2 Humble. We recommand osrf/ros:humble-desktop-full.
+2. If you need run this repo locally, please make sure you have the docker environment on your pc. 
 
 ### Core Features  
 - **Map Building**  
@@ -17,144 +19,117 @@ This repository provides a TurtleBot3 robot simulation environment and navigatio
   - Predefined waypoints stored in YAML configuration (20-point pool)  
 - **Test Reporting**  
   Generates comprehensive `test_report` after navigation tasks  
-
----
-
-## 🚧 Current TODO List
-
-### High Priority
-1. **Topic Enhancement** 🔄 Developing  
-   - [x] Add support for `/plan` visualization topics
-   ```
-      use /received_global_plan instead. /plan doesn't contain frame.id in every pose. 
-   ```
-   - [x] Implement 3D map topics (OctoMap/PointCloud2)
-   - [ ] Integrate camera topics (`/camera/rgb/image_raw`)
-
-2. **System Lifecycle** ⚙️ Planned  
-   - [x] Graceful shutdown procedure for nav_test
-   ```python
-   # Proposed shutdown sequence
-   def shutdown_handler(signum, frame):
-       stop_navigation()
-       destroy_nodes()
-       sys.exit(0)
-   ```
-   - [ ] Automatic cleanup of dependent nodes, make sure mcap is finalized and indexed.
-
-3. **Test Reporting** 📊 In Progress  
-   - [x] JSON report generation (current)
-   - [x] JUnit XML report format from pytest
-   - [x] Key moment markers in reports
-         '''
-         if single task_case failed, it will publish error_code.
-         '''
-   ```xml
-   <!-- JUnit example -->
-   <testcase name="NavigationToPoint2" status="FAILED">
-     <failure message="Timeout exceeded"/>
-   </testcase>
-   ```
-
-### Load from data folder
-4. **Test Case extracted** ✅ Completed  
-   ```bash
-   # Single directory mounting
-   docker run -v ./coscene/records/case1:/cos/files ...
-   ```
-   Directory structure:
-   ```
-   /cos/files
-   ├── maps/
-   ├── models/
-   ├── worlds/
-   └── config/
-   ```
-
-5. **Platform Integration** 🔗 Testing  
-   - [ ] coBridge service exposure on regression test platform
- - currently it's exposed from docker
-   ```yaml
-   # docker-compose.yml
-   cobridge:
-     ports:
-       - "21274:21274"
-   ```
-   - [ ] One-click playback in coStudio
+- **Provide online & offline Visualization function**
+  Follow the guide from  https://docs.coscene.cn/docs/client/connect-by-cobridge  part 3
+  We provide a recommendation layout. in /coscene/layout
 
 ---
 
 ## 🛠️ Usage Guide
+### Function difference
 
-### 1. Setup Environment
+|Function| On-line | Off-line |
+|----------|----------|-------------|
+| Map Building | Build map in RMUL2024 world | Build map in RMUL2024 world |
+| Autonomous Navigation | Automatically navigate through 10 waypoints | Automatically navigate through 10 waypoints |
+| Waypoint Pool | Predefined 20 navigation points(can be edit before test) | Predefined 20 navigation points(can be edit before test) |
+| Test Reporting | Generate navigation test reports | Generate navigation test reports |
+| Visualization | Connect via coBridge to view in real-time(auto) | Connect via coBridge to view in real-time(manual select) |
+| Gazebo Simulation | Full physics simulation with Gazebo 11(headless) | Full physics simulation with Gazebo 11(headless) |
+| YAML Configuration | Configure test parameters(test points and initial pose of robot) via YAML | Configure test parameters(test points and initial pose of robot) via YAML |
+| MCAP Recording | Record data as MCAP files (5Mins per file) | Record data as MCAP files (5Mins per file) |
+| Custom Recorder | Supports custom topic selection for recording | Supports custom topic selection for recording |
+| Dockerized Environment | Not Necessary | Fully containerized test environment |
+
+### Local Usage
+#### 1. Install Docker on your local PC
+
+Follow the official guide to install Docker:
+[Docker installation guide](https://docs.docker.com/get-docker/)
+
+After installation, verify by running:
+
 ```bash
-# Clone repository
+docker run hello-world
+```
+
+This command pulls a minimal Docker image and runs a test container. If you see a hello message, Docker works correctly.
+
+#### 2. Clone the repository
+
+```bash
 git clone <repo-url>
-cd gazebo-testing/ros2_ws
-
-# Build package
-colcon build
+cd gazebo-testing/
 ```
 
-### 2. Environment Configuration
+#### 3. Build and run the project
+
 ```bash
-ROS_WORKSPACE="~/gazebo-testing/ros2_ws/"
-
-# ROS2 Environment
-source /opt/ros/humble/setup.bash
-
-# TurtleBot3 Configuration
-source ${ROS_WORKSPACE}/install/setup.bash
-export ROS_DOMAIN_ID=30  # TURTLEBOT3 ID
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:${ROS_WORKSPACE}/src/turtlebot3_simulations/turtlebot3_gazebo/models
-export TURTLEBOT3_MODEL=waffle_pi
-
-# Workspace Setup
-source ${ROS_WORKSPACE}/install/setup.bash
+docker compose up --build
 ```
 
-### 3. Launch Simulation
-```bash
-# Start Gazebo world
-ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+This will automatically build and run the whole repo.
 
-# beware of this bug: https://github.com/ROBOTIS-GIT/turtlebot3/pull/916
-# the fix is in the devel branch but doesn't seems to be released to the apt source
-# (In new terminal) Configure navigation
-cp -r sim_map ~/desired_location
-cd ~/desired_location/20250314
-ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=true map:=normal.yaml
+#### 4. Install coStudio
 
-# (In new terminal) localization
-ros2 topic pub /initialpose geometry_msgs/msg/PoseWithCovarianceStamped '
-{
-  header: {
-    stamp: {sec: 0, nanosec: 0},
-    frame_id: "map"
-  },
-  pose: {
-    pose: {
-      position: {x: 0.00392, y: -0.0045, z: 0.191},                       
-      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}                     
-    },
-    covariance: [
-      0.25, 0.0, 0.0, 0.0, 0.0, 0.0,                          
-      0.0, 0.25, 0.0, 0.0, 0.0, 0.0,           
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.06853891945200942, 0.0, 0.0,                     
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-    ]
-  }
-}' --once
+Download and install coStudio to your local PC. You can find the installation guide here:
+
+[coStudio Download & Install](https://docs.coscene.cn/docs/client/connect-by-cobridge)
+
+#### 5. Open coStudio and connect locally
+
+- Select **Local Connection**.
+- Import the layout file from `/coscene/layout` in this repo.
+- You can now observe the simulation visually.
 
 
-# (In new terminal) Start test suite
-ros2 launch nav_test test_nav.launch.py
+### Online Usage
 
-# (In new terminal) Data recording
-python3 ros_bag_recorder.py
+## 📌 Project CI/CD and Docker Workflow Overview
+
+This project includes a seamless pipeline to manage code building, testing, Docker image generation, and usage in local or remote environments.
+
+### 🔧 Workflow Overview
+
+```plaintext
+Git push / PR Merge
+        │
+        ▼
+GitHub Actions Triggered
+ ┌─────────────────────┬──────────────────────────┐
+ │ colcon-build.yml    │ docker-build-push.yml    │
+ │ Build & Test Source │ Build & Push Docker Image│
+ └─────────────────────┴──────────────────────────┘
+        │
+        ▼
+Docker image pushed to cr.coscene.cn
+        │
+        ▼
+Users pull and run the Docker image via docker-compose
+        │
+        ▼
+coStudio connects (local or remote) for visualization
 ```
+
+---
+
+### 🚀 Components Explained
+
+| Component | File | Role |
+|-----------|------|------|
+| **Build & Test ROS2 Workspace** | `.github/workflows/colcon-build.yml` | Internal CI: Builds source, runs tests, generates `install` artifact |
+| **Build & Publish Docker Image** | `.github/workflows/docker-build-push.yml` | Production use: Builds Docker image and pushes to private registry |
+| **Authentication Secrets** | `.secrets` (or `.secrets.example`) | Secure storage for Docker registry and CoScene API credentials |
+
+---
+
+### 🧰 User Operations
+
+You can:
+- Edit navigation waypoints via `./coscene/records/case1/config/test_points.yaml`.
+- Change data recording parameters in `./coscene_recorder/config`.
+- Customize layouts for visualization in `/coscene/layout`.
+
 
 ---
 

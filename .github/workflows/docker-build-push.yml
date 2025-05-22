@@ -5,7 +5,7 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch: # Allow manual triggering of the workflow
 
 jobs:
   build-and-push:
@@ -41,7 +41,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          #platforms: linux/amd64,linux/arm64
           platforms: linux/amd64
           push: true
           tags: |

@@ -7,7 +7,7 @@ jobs:
   colcon-build-and-test:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/coscene-io/ros:humble-turtlebot3
+      image: ghcr.io/${{ vars.IMAGE_NAME }}
 
     steps:
       - uses: actions/checkout@v4
