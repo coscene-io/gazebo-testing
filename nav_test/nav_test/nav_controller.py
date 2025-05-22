@@ -3,6 +3,8 @@ import json
 import os
 import random
 import time
+import subprocess
+import signal
 from datetime import datetime
 from uuid import uuid4
 
@@ -334,13 +336,12 @@ class NavController(Node):
             report_dir = self.get_parameter("report_path").value
             report_filename = f"nav_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xml"
             report_path = os.path.join(report_dir, report_filename)
-    
+
             os.makedirs(report_dir, exist_ok=True)
-    
+
             import xml.etree.ElementTree as ET
             from xml.dom import minidom
 
-        
             for task in self.task_mgr.history:
                 if not isinstance(task.get("start_time"), datetime):
                     self.get_logger().error(f"Invalid start_time in task {task['id']}")
@@ -363,7 +364,7 @@ class NavController(Node):
                 "failures": str(failures),
                 "time": f"{total_time:.3f}"
             })
-    
+
             testsuite = ET.SubElement(testsuites, "testsuite", {
                 "id": "navigation_tasks",
                 "name": "Navigation Tasks",
@@ -371,7 +372,7 @@ class NavController(Node):
                 "failures": str(failures),
                 "time": f"{total_time:.3f}"
             })
-    
+
             for task in self.task_mgr.history:
                 duration = (task["end_time"] - task["start_time"]).total_seconds()
                 case_attrs = {
@@ -380,7 +381,7 @@ class NavController(Node):
                     "time": f"{duration:.3f}"
                 }
                 testcase = ET.SubElement(testsuite, "testcase", case_attrs)
-        
+
                 if task["status"] == "failed":
                     failure = ET.SubElement(testcase, "failure", {
                         "message": task["error_info"],
@@ -393,13 +394,21 @@ class NavController(Node):
             xml_str = ET.tostring(testsuites, encoding="utf-8")
             dom = minidom.parseString(xml_str)
             pretty_xml = dom.toprettyxml(indent="  ", encoding="utf-8")
-    
+
             with open(report_path, "wb") as f:
                 f.write(pretty_xml)
-        
+
             self.get_logger().info(f"JUnit report generated: {report_path}")
             rclpy.try_shutdown()
-    
+
+            # --- Add code to kill parent process (ros2 launch) ---
+            try:
+                ppid = os.getppid()
+                self.get_logger().info(f"Killing parent process {ppid} to shutdown launch system...")
+                os.kill(ppid, signal.SIGINT)
+            except Exception as e:
+                self.get_logger().error(f"Failed to kill parent process: {e}")
+
         except Exception as e:
             self.get_logger().error(f"Report generation failed: {str(e)}")
             raise  
@@ -423,6 +432,7 @@ def main(args=None):
         # Check if ROS context is initialized before shutdown
         if rclpy.ok():
             rclpy.shutdown()
+
 
 
 if __name__ == "__main__":
