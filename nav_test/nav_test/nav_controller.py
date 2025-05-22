@@ -107,6 +107,15 @@ class NavController(Node):
         self.stop_navigation = False
         self.current_task = None
 
+        # Track if amcl_pose has been received after publishing initial pose
+        self.amcl_pose_received = False
+        self.create_subscription(
+            PoseWithCovarianceStamped,
+            "/amcl_pose",
+            self.amcl_pose_callback,
+            QoSProfile(depth=10)
+        )
+
         # Schedule startup sequence with a short delay to allow node initialization to complete
         self.startup_timer = self.create_timer(0.5, self.initialize_sequence)
 
@@ -137,9 +146,9 @@ class NavController(Node):
             initial_pose_msg.header.stamp = self.get_clock().now().to_msg()
 
             # Create publisher using AMCL's expected QoS settings
-            initial_pose_qos = QoSProfile(depth=1)
+            initial_pose_qos = QoSProfile(depth=10)
             initial_pose_qos.reliability = ReliabilityPolicy.RELIABLE
-            initial_pose_qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
+            initial_pose_qos.durability = DurabilityPolicy.VOLATILE
 
             pub = self.create_publisher(
                 PoseWithCovarianceStamped, "/initialpose", initial_pose_qos
@@ -165,18 +174,27 @@ class NavController(Node):
                 f"Found {sub_count} subscribers for /initialpose topic"
             )
 
-            # Publish the initial pose
-            pub.publish(initial_pose_msg)
-            self.get_logger().info("Initial pose published")
+            # Reset amcl_pose_received flag before publishing
+            self.amcl_pose_received = False
+
+            # Loop to publish initial pose until AMCL acknowledges
+            max_attempts = 20
+            interval = 0.5
+            attempts = 0
+            while not self.amcl_pose_received and attempts < max_attempts:
+                pub.publish(initial_pose_msg)
+                self.get_logger().info(f"Published initial pose, attempt {attempts + 1}")
+                time.sleep(interval)
+                attempts += 1
+
+            if not self.amcl_pose_received:
+                self.get_logger().warn("AMCL did not acknowledge initial pose within timeout.")
+            else:
+                self.get_logger().info("AMCL acknowledged initial pose.")
+
 
             # Clean up publisher
             self.destroy_publisher(pub)
-
-            # Wait for 3 seconds to ensure AMCL processes the initial pose
-            self.get_logger().info(
-                "Waiting 10 seconds for AMCL to process the initial pose..."
-            )
-            time.sleep(10.0)
 
             # Start navigation tasks
             self.get_logger().info("Starting navigation tasks...")
@@ -185,6 +203,10 @@ class NavController(Node):
         except Exception as e:
             self.get_logger().error(f"Failed to publish initial pose: {str(e)}")
             raise
+    
+    def amcl_pose_callback(self, msg):
+        self.amcl_pose_received = True
+
 
     def start_next_task(self):
         if self.stop_navigation:
